@@ -13,3 +13,4 @@ tokens = {
     '': '',
     '': '',
 }
+dataTypes = {}
