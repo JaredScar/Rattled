@@ -1,60 +1,82 @@
 import re
+import constants
+
+
+#
+# Rattled Programming Language Lexer
+#
 class Lexer(object):
     def __init__(self, source_code):
         self.source_code = source_code
+
     def main(self):
         tokens = []
 
         sourceTokenized = self.source_code.split()
+
         stringTracked = False
         trackedString = ""
         trackedSymbol = ""
         for token in sourceTokenized:
             # This tokenizes the string part of source code
-            if('"' in token or "'" in token or stringTracked == True):
-                if not (token[0] in token[len(token) - 1] and (token[0] in "'" or token[0] in '"')):
-                    if(stringTracked == True and trackedSymbol in token):
+            if ('"' in token or "'" in token or stringTracked == True):
+                # Make sure the string doesn't end on the first token:
+                if not (token[0] in token[1:len(token)] and (token[0] in "'" or token[0] in '"')):
+                    # We are currently interpreting a string, so we keep adding it to the trackedString
+                    if (stringTracked == True and trackedSymbol in token):
                         # This is where the string ends, since we already have been tracked a string
                         trackedSymbol = ""
                         stringTracked = False
-                        trackedString += token[0:len(token) - 1]
+                        if (";" in token[len(token) - 1]):
+                            trackedString += token[0:len(token) - 2]
+                        else:
+                            trackedString += token[0:len(token) - 1]
                         tokens.append(['STRING', trackedString])
                         trackedString = ""
                     else:
                         # This is still part of a string, add it to trackedString
-                        if(stringTracked == False):
+                        if (stringTracked == False):
                             trackedString += token[1:len(token)] + " "
                         else:
                             trackedString += token + " "
-                        if('"' in token):
+                        if (len(trackedSymbol) == 0 and '"' in token):
                             trackedSymbol = '"'
-                        elif("'" in token):
+                        elif (len(trackedSymbol) == 0 and "'" in token):
                             trackedSymbol = "'"
-                        print("Token is: " + token)
-                        print("TrackedString is: " + trackedString)
-                        print("TrackedSymbol is: " + trackedSymbol)
                         stringTracked = True
                 else:
-                    tokens.append(['STRING', token[1:len(token) - 1]])
-            elif(token in "pr"):
+                    if ";" in token[len(token) - 1]:
+                        tokens.append(['STRING', token[1:len(token) - 2]])
+                    else:
+                        tokens.append(['STRING', token[1:len(token) - 1]])
+            # Is performing a function
+            elif (token in constants.functions):
                 tokens.append(['FUNCTION', token])
-            elif(token in "rd"):
-                tokens.append(['FUNCTION', token])
-            elif(token in "wr"):
-                tokens.append(['FUNCTION', token])
-            elif(re.match('[a-z]', token) or re.match('[A-Z]', token)):
-                if(";" in token):
+            # Is calling for a cast
+            elif (token in constants.casts):
+                tokens.append(['CAST', token])
+            # Is calling a Rattled keyword
+            elif (token in constants.keywords):
+                tokens.append(['KEYWORD', token])
+            # Is creating a variable identifier
+            elif (re.match('[a-z]', token) or re.match('[A-Z]', token)):
+                if (";" in token):
                     tokens.append(['IDENTIFIER', token[0:len(token) - 2]])
                 else:
                     tokens.append(['IDENTIFIER', token])
-            elif(re.match('[0-9]', token)):
+            # Is creating an Integer
+            elif (re.match('[0-9]', token)):
                 if (";" in token):
                     tokens.append(['INTEGER', token[0:len(token) - 1]])
                 else:
                     tokens.append(['INTEGER', token])
-            elif(token in "-+=/*%!"):
+            # Is trying to perform an operation
+            elif (token in "-+=/*%!"):
                 tokens.append(['OPERATOR', token])
 
         print(tokens)
+
+
+# JUST FOR TESTING: - TODO Get rid of
 lex = Lexer(open('../examples/printStatement.ry', 'r').read())
 lex.main()

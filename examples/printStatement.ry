@@ -1,2 +1,4 @@
-name = "Rattled"
-pr "This is how you run a print statement in the" + name + "programming language! :) Quite Simple!"
+name = "Rattled";
+pr "This is how you run a print statement in the" + name + "programming language! :) Quite Simple!";
+pr "You don't need to end anything with a ;, but you can if you'd like :)"
+pr "'This is another test'"
