@@ -20,7 +20,7 @@ i should be previously defined.
 age = 21
 name = 'Jared'
 bool = boo('TRUE')
-` This is a comment in Rattled
+`This is a comment in Rattled`
 for i < 5 {
     pr 'Example of a for loop in Rattled ' + i
 }

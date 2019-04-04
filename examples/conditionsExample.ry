@@ -1,4 +1,4 @@
-if 5 > 4 {
+if 5 > 4.2 {
     pr "This is a true statement"
 } el {
     pr "This will never be printed...";

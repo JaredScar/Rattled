@@ -9,4 +9,4 @@ keywords = ['fn', 'glo', 'arr', 'hashm', 'imp', 'lis', 'stat', 'Clas', 'for', 'w
 functions = ['pr', 'rd', 'wr', 'fl', 'inp', 'binSer', 'mergSor', 'quikSor',
              'heapSor', 'bubSor']
 #        String   Integer Double  Float
-casts = ['str(', 'int(', 'dub(', 'flo(']
+casts = ['str(', 'int(', 'flo(']
