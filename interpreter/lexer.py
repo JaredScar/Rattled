@@ -31,6 +31,7 @@ class Lexer(object):
                             trackedString += token[0:len(token) - 2]
                         else:
                             trackedString += token[0:len(token) - 1]
+                        trackedString += " "
                         tokens.append(['STRING', trackedString])
                         trackedString = ""
                     else:
@@ -73,10 +74,7 @@ class Lexer(object):
             # Is trying to perform an operation
             elif (token in "-+=/*%!"):
                 tokens.append(['OPERATOR', token])
-
-        print(tokens)
-
-
-# JUST FOR TESTING: - TODO Get rid of
-lex = Lexer(open('../examples/printStatement.ry', 'r').read())
-lex.main()
+        #print(tokens)
+        self.tokens = tokens
+    def getTokens(self):
+        return self.tokens

@@ -1,0 +1,17 @@
+if 5 > 4 {
+    pr "This is a true statement"
+} el {
+    pr "This will never be printed...";
+}
+
+if 4 < 5 {
+    pr "This will never be printed...";
+} el {
+    pr "This is not a true statement"
+}
+
+bool = FALSE
+
+if !bool {
+    pr "The statement is not FALSE so it is true and this statement runs"
+}

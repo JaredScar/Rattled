@@ -1,0 +1,17 @@
+for i < 10 {
+    pr "For Loop " + i
+}
+
+while i < 5 {
+    pr "While Loop " + i
+}
+
+index = 5;
+for 10 > index {
+    pr "For loop using a predefined variable 'index' " + index;
+}
+
+index = 0
+while index < 5 {
+    pr "While loop using predefined variable 'index' " + index
+}
