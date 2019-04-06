@@ -5,6 +5,13 @@ import constants
 #
 # Rattled Programming Language Lexer
 #
+# Lexing regex:
+'''
+variable declaration: 
+pr function:
+if statement: (if\(.*\)|if.\(.*\))                  Doesn't factor in that each open parenthesis has a closed one yet
+if body: {([^}]+)}                                  Encounters problem when another } in String
+'''
 class Lexer(object):
     def __init__(self, source_code):
         self.source_code = source_code

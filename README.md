@@ -33,6 +33,17 @@ if bool {
     pr "My name is " + name + " and I am " + age + " years old";
 }
 ```
+# TODO List
+[x] Lexer splits up source code into tokens by spaces
+
+[ ] Code actually runs the functions
+
+[ ] Spaces get ignored by lexer
+
+[ ] Multi-line variable declaration by keeping variable values in parenthesis
+
+[ ] Keywords (if, for, while) ignore spacing and parenthesis when parsing
+their bodies and conditionals
 # Installation
 TBD
 # Documentation
