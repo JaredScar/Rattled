@@ -42,8 +42,8 @@ if bool {
 
 - [ ] Multi-line variable declaration by keeping variable values in parenthesis
 
-- [ ] Keywords (if, for, while) ignore spacing and parenthesis when parsing
-their bodies and conditionals
+- [ ] Keywords (if, for, while) ignore spacing and equal amount of
+parenthesis when parsing their bodies and conditionals
 # Installation
 TBD
 # Documentation
