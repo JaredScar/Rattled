@@ -1,5 +1,11 @@
 name = "Rattled";
-anotherVar = "This is another var" + "to test if the language works" + name
+anotherVar = "This is another var "
+    + "to test if the language works" + name
+
+thisIsVar = "This should cause an error, but currently " "doesn't though..." # This is a comment
+
+castExample = "This is an example of casting something: " + str(5)
+
 pr "This is how you run a print statement in the" + name + "programming language! :) Quite Simple!";
 pr "You don't need to end anything with a ;, but you can if you'd like :)"
 pr "'This is another test'"
