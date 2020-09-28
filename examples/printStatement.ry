@@ -1,6 +1,6 @@
 name = "Rattled";
 anotherVar = "This is another var "
-    + "to test if the language works" + name
+    + "to test if the language works: " + name
 
 numVariable = 6 + 10 + 11
 numVariableWithParenthesis = (6+11+10) # Needs to be read still, doesn't work
