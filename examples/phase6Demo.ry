@@ -1,0 +1,280 @@
+# Phase 6 — Language Completeness Demo
+# Run: rattled examples/phase6Demo.ry
+
+# ----------------------------------------------------------------
+# 6A — Operators & Expressions
+# ----------------------------------------------------------------
+
+pr "--- 6A. Augmented Assignment ---"
+x = 10
+x += 5
+pr "x += 5  -> " + x
+x -= 3
+pr "x -= 3  -> " + x
+x *= 2
+pr "x *= 2  -> " + x
+x /= 4
+pr "x /= 4  -> " + x
+x **= 2
+pr "x **= 2 -> " + x
+
+pr ""
+pr "--- 6A. Ternary  (cond ? a : b) ---"
+score = 85
+grade = score >= 90 ? "A" : score >= 70 ? "B" : "C"
+pr "score " + score + " -> grade " + grade
+
+pr ""
+pr "--- 6A. Null Coalescing  (??) ---"
+username = null
+display = username ?? "Guest"
+pr "display = " + display
+username = "Jared"
+display = username ?? "Guest"
+pr "display = " + display
+
+# ----------------------------------------------------------------
+# 6B — Iteration
+# ----------------------------------------------------------------
+
+pr ""
+pr "--- 6B. For-Each over Array ---"
+arr fruits = ["apple", "banana", "cherry"]
+for fruit in fruits {
+    pr "  " + fruit
+}
+
+pr ""
+pr "--- 6B. For-Each over Hashmap (k, v) ---"
+hashm scores = {alice: 95, bob: 82, carol: 91}
+for name, pts in scores {
+    pr "  " + name + ": " + pts
+}
+
+pr ""
+pr "--- 6B. Array Slice  arr[start..end] ---"
+arr nums = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+pr "nums[2..6] = " + nums[2..6]
+
+# ----------------------------------------------------------------
+# 6C — Error Handling
+# ----------------------------------------------------------------
+
+pr ""
+pr "--- 6C. Finally Block ---"
+try {
+    result = int("42")
+    pr "parsed: " + result
+} catch ValueError {
+    pr "parse failed"
+} fin {
+    pr "finally always runs"
+}
+
+pr ""
+pr "--- 6C. Multi-Type Catch ---"
+try {
+    bad = int("not-a-number")
+} catch ValueError, TypeError {
+    pr "caught ValueError or TypeError"
+}
+
+pr ""
+pr "--- 6C. Throw / Raise ---"
+fn checkAge(age) {
+    if age < 0 {
+        thr ValueError("Age cannot be negative")
+    }
+    ret age
+}
+try {
+    checkAge(-5)
+} catch ValueError {
+    pr "caught: age validation error"
+}
+
+# ----------------------------------------------------------------
+# 6D — Functions
+# ----------------------------------------------------------------
+
+pr ""
+pr "--- 6D. Lambda (lam x -> expr) ---"
+double  = lam x -> x * 2
+square  = lam x -> x * x
+addTwo  = lam x, y -> x + y
+pr "double(7)   = " + double(7)
+pr "square(5)   = " + square(5)
+pr "addTwo(3,4) = " + addTwo(3, 4)
+
+arr data = [5, 3, 8, 1, 9, 2]
+data.sort(key = lam x -> x)
+pr "sorted: " + data
+
+pr ""
+pr "--- 6D. Anonymous Function (fn(...) { }) ---"
+cube = fn(x) { ret x * x * x }
+pr "cube(4) = " + cube(4)
+
+pr ""
+pr "--- 6D. Variadic Args (...args) ---"
+fn sum(...args) {
+    total = 0
+    for n in args {
+        total += n
+    }
+    ret total
+}
+pr "sum(1,2,3,4,5) = " + sum(1, 2, 3, 4, 5)
+
+fn log(label, ...values) {
+    pr label + ": " + values
+}
+log("numbers", 10, 20, 30)
+
+pr ""
+pr "--- 6D. Generator / Yield (yld) ---"
+fn evens(limit) {
+    n = 0
+    while n < limit {
+        if n % 2 == 0 {
+            yld n
+        }
+        n += 1
+    }
+}
+arr evenList = list(evens(10))
+pr "even numbers < 10: " + evenList
+
+# ----------------------------------------------------------------
+# 6E — Strings & Collections
+# ----------------------------------------------------------------
+
+pr ""
+pr "--- 6E. Multi-Line Strings ---"
+poem = """Roses are red,
+Violets are blue,
+Rattled is great,
+And so are you."""
+pr poem
+
+pr ""
+pr "--- 6E. Array Comprehension ---"
+arr squares = [x * x for x in [1, 2, 3, 4, 5]]
+pr "squares: " + squares
+
+arr evens2 = [x for x in [1, 2, 3, 4, 5, 6, 7, 8] if x % 2 == 0]
+pr "evens:   " + evens2
+
+arr words = ["hello", "world", "rattled"]
+arr upper = [w.upper() for w in words]
+pr "upper:   " + upper
+
+pr ""
+pr "--- 6E. Spread Operator (...) ---"
+arr first  = [1, 2, 3]
+arr second = [4, 5, 6]
+arr combined = [...first, ...second]
+pr "combined: " + combined
+
+pr "max of first:  " + max(...first)
+pr "min of second: " + min(...second)
+
+# ----------------------------------------------------------------
+# 6F — OOP
+# ----------------------------------------------------------------
+
+pr ""
+pr "--- 6F. Property Getter / Setter ---"
+Clas Temperature {
+    def(celsius) {
+        self._c = celsius
+    }
+    get fn celsius() { ret self._c }
+    set fn celsius(val) { self._c = val }
+    get fn fahrenheit() { ret self._c * 9 / 5 + 32 }
+}
+temp = Temperature(100)
+pr "boiling point celsius:    " + temp.celsius
+pr "boiling point fahrenheit: " + temp.fahrenheit
+temp.celsius = 0
+pr "freezing point celsius:    " + temp.celsius
+pr "freezing point fahrenheit: " + temp.fahrenheit
+
+pr ""
+pr "--- 6F. Static Class Variables ---"
+Clas Counter {
+    stat total = 0
+    def(name) {
+        self.name = name
+        Counter.total += 1
+    }
+    stat fn getTotal() { ret Counter.total }
+}
+Counter("a")
+Counter("b")
+Counter("c")
+pr "objects created: " + Counter.getTotal()
+
+pr ""
+pr "--- 6F. Multiple Inheritance ---"
+Clas Flyable {
+    fn fly() { pr "  " + self.name + " is flying" }
+}
+Clas Swimmable {
+    fn swim() { pr "  " + self.name + " is swimming" }
+}
+Clas Duck(Flyable, Swimmable) {
+    def(name) { self.name = name }
+}
+duck = Duck("Donald")
+duck.fly()
+duck.swim()
+
+pr ""
+pr "--- 6F. Abstract Classes ---"
+abst Clas Shape {
+    abst fn area() {}
+    abst fn perimeter() {}
+    fn describe() {
+        pr "  area = " + self.area() + "  perimeter = " + self.perimeter()
+    }
+}
+Clas Rectangle(Shape) {
+    def(w, h) {
+        self.w = w
+        self.h = h
+    }
+    fn area() { ret self.w * self.h }
+    fn perimeter() { ret 2 * (self.w + self.h) }
+}
+Clas Circle2(Shape) {
+    def(r) { self.r = r }
+    fn area() { ret 3.14159 * self.r * self.r }
+    fn perimeter() { ret 2 * 3.14159 * self.r }
+}
+rect   = Rectangle(4, 6)
+circle = Circle2(5)
+pr "Rectangle(4, 6):"
+rect.describe()
+pr "Circle(5):"
+circle.describe()
+
+# ----------------------------------------------------------------
+# 6G — Imports
+# ----------------------------------------------------------------
+
+pr ""
+pr "--- 6G. Import Alias ---"
+imp json as j
+data = j.dumps({name: "Rattled", version: 6})
+pr data
+
+pr ""
+pr "--- 6G. Wildcard Import ---"
+imp * from math
+pr "pi     = " + pi
+pr "sqrt(2)= " + sqrt(2)
+pr "floor(3.9) = " + str(floor(3.9))
+
+pr ""
+pr "=== Phase 6 Complete ==="

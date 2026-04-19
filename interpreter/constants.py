@@ -18,7 +18,7 @@ TT_RBRACKET  = 'RBRACKET'  # ]
 TT_COMMA     = 'COMMA'
 TT_DOT       = 'DOT'
 TT_COLON     = 'COLON'
-TT_RANGE     = 'RANGE'    # ..
+TT_RANGE     = 'RANGE'     # ..
 TT_EOF       = 'EOF'
 
 # ─── Reserved Keywords ───────────────────────────────────────────────────────
@@ -27,25 +27,27 @@ KEYWORDS = frozenset({
     'if', 'elif', 'el',
     'for', 'while',
     'sw', 'cs',
-    'try', 'catch',
+    'try', 'catch', 'fin',
     # definitions
-    'fn', 'Clas', 'def', 'ret', 'sup', 'glo',
+    'fn', 'Clas', 'def', 'ret', 'sup', 'glo', 'abst',
     # collections
     'arr', 'hashm',
     # I/O
     'pr', 'inp', 'rd', 'wr', 'fl',
     # imports
-    'imp', 'from',
+    'imp', 'from', 'as',
     # literals
     'TRUE', 'FALSE', 'null',
     # built-in algorithms
     'binSer', 'mergSor', 'quikSor', 'heapSor', 'bubSor',
-    # range-for
+    # range-for / iteration
     'in',
     # loop control
     'brk', 'cont',
-    # static methods
+    # method modifiers
     'stat',
+    # lambdas / generators / errors
+    'lam', 'yld', 'thr',
 })
 
 # ─── Cast-function identifier → Python builtin ──────────────────────────────
@@ -70,14 +72,17 @@ LOGICAL_OP = {
 }
 
 # ─── Binary operator precedence table (higher = tighter binding) ─────────────
+# ?? is lower than || so it evaluates after logical OR chains.
+# All values shifted up by 1 vs the original table to make room for ?? at 1.
 OP_PREC = {
-    '||': 1,
-    '&&': 2,
-    '==': 3, '!=': 3,
-    '<':  4, '>':  4, '<=': 4, '>=': 4,
-    '+':  5, '-':  5,
-    '*':  6, '/':  6, '%':  6,
-    '**': 7,
+    '??': 1,
+    '||': 2,
+    '&&': 3,
+    '==': 4, '!=': 4,
+    '<':  5, '>':  5, '<=': 5, '>=': 5,
+    '+':  6, '-':  6,
+    '*':  7, '/':  7, '%':  7,
+    '**': 8,
 }
 
 # ─── Standard library function names (built-in algorithms) ───────────────────

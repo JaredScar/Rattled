@@ -29,6 +29,7 @@
 7. [Error Handling](#7-error-handling)
 8. [Implementation Roadmap](#8-implementation-roadmap)
 9. [Open Questions / Decisions Needed](#9-open-questions--decisions-needed)
+10. [Phase 6 — Language Completeness Backlog](#phase-6--language-completeness-)
 
 ---
 
@@ -581,12 +582,93 @@ Maps to Python's `try / except`.
 - [x] Interactive REPL (`python rattled.py` with no arguments)
 - [x] Root-level launcher `rattled.py` (no need to `cd` into `interpreter/`)
 
-### Phase 5 — Polish 🔲 Remaining
+### Phase 5 — Polish ✅ Complete
 - [x] Friendly error messages with `.ry` line numbers
 - [x] `--check` flag (lint only, no execution)
 - [x] REPL mode (`python rattled.py` with no arguments)
 - [x] **VS Code syntax-highlighting extension** — TextMate grammar for `.ry` files (`vscode-rattled/`)
 - [x] **PyPI packaging** — `pyproject.toml` so `pip install rattled` and `rattled file.ry` work
+- [x] **Installer** — `install.bat` / `install.ps1` that pip-installs and adds to PATH automatically
+
+---
+
+### Phase 6 — Language Completeness ✅ Complete
+
+Features present in most modern languages (Go, Kotlin, Swift, TypeScript, Rust) that Rattled does not yet support. Grouped by area.
+
+#### 6A — Operators & Expressions
+
+| Feature | Rattled syntax (proposed) | Python equivalent | Status |
+|---------|--------------------------|-------------------|--------|
+| Augmented assignment | `x += 3` `x -= 1` `x *= 2` `x /= 4` `x %= 2` `x **= 3` | same | ✅ done |
+| Ternary expression | `val = cond ? a : b` | `a if cond else b` | ✅ done |
+| Null coalescing | `val = x ?? "default"` | `x if x is not None else "default"` | ✅ done |
+
+#### 6B — Iteration
+
+| Feature | Rattled syntax (proposed) | Python equivalent | Status |
+|---------|--------------------------|-------------------|--------|
+| For-each over array | `for item in myArr { }` | `for item in myArr:` | ✅ done |
+| For-each over hashmap | `for key, val in myMap { }` | `for k,v in myMap.items():` | ✅ done |
+| Array / string slice | `myArr[1..4]` | `myArr[1:4]` | ✅ done |
+
+> Note: `for i in 0..10` (numeric range) already works. The missing form is iterating *elements* of an existing collection.
+
+#### 6C — Error Handling
+
+| Feature | Rattled syntax (proposed) | Python equivalent | Status |
+|---------|--------------------------|-------------------|--------|
+| `finally` block | `fin { }` after `try/catch` | `finally:` | ✅ done |
+| Multi-type catch | `catch ValueError, TypeError { }` | `except (ValueError, TypeError):` | ✅ done |
+| Throw / raise | `thr ValueError("msg")` | `raise ValueError("msg")` | ✅ done |
+
+#### 6D — Functions
+
+| Feature | Rattled syntax (proposed) | Python equivalent | Status |
+|---------|--------------------------|-------------------|--------|
+| Lambda / anonymous fn | `lam x -> x * 2` / `fn(x) { ret x*2 }` | `lambda x: x * 2` | ✅ done |
+| Variadic positional args | `fn foo(...args) { }` | `def foo(*args):` | ✅ done |
+| Variadic keyword args | `fn foo(~~kwargs) { }` | `def foo(**kwargs):` | ✅ done |
+| Generator / yield | `yld value` inside `fn` | `yield value` | ✅ done |
+| Keyword call args | `foo(key = val)` | same | ✅ done |
+
+#### 6E — Strings & Collections
+
+| Feature | Rattled syntax (proposed) | Python equivalent | Status |
+|---------|--------------------------|-------------------|--------|
+| Multi-line string | `"""line1\nline2"""` or `'''...'''` | same | ✅ done |
+| Array comprehension | `[x * 2 for x in arr]` (+ `if` filter) | same | ✅ done |
+| Spread / concat arrays | `[...arr1, ...arr2]` | `[*arr1, *arr2]` | ✅ done |
+
+#### 6F — OOP
+
+| Feature | Rattled syntax (proposed) | Python equivalent | Status |
+|---------|--------------------------|-------------------|--------|
+| Class-level (static) variable | `stat x = 0` inside `Clas` | class attribute | ✅ done |
+| Property getter / setter | `get fn name() { }` / `set fn name(v) { }` | `@property` | ✅ done |
+| Abstract base class | `abst Clas Shape { }` / `abst fn method() {}` | `abc.ABC` | ✅ done |
+| Multiple inheritance | `Clas C(A, B) { }` | same | ✅ done |
+
+#### 6G — Imports
+
+| Feature | Rattled syntax (proposed) | Python equivalent | Status |
+|---------|--------------------------|-------------------|--------|
+| Import alias | `imp numpy as np` | same | ✅ done |
+| Wildcard import | `imp * from math` | `from math import *` | ✅ done |
+
+#### 6H — Standard Library Built-ins
+
+These can be supported without new syntax — they just need auto-import wrappers or direct pass-through.
+
+| Function | Notes |
+|----------|-------|
+| `len(x)` | Already works via Python pass-through |
+| `abs(x)` `min(x,y)` `max(x,y)` `round(x,n)` `pow(x,n)` | Pass-through to Python built-ins |
+| `type(x)` | Rattled-friendly type inspection |
+| `range(n)` `range(a,b)` | Should be usable directly inside `for` |
+| `zip(a, b)` `enumerate(a)` | Useful for iteration patterns |
+| `open(path, mode)` | Direct file I/O; `rd`/`wr` cover basic cases |
+| String methods | `.upper()` `.lower()` `.strip()` `.split()` `.replace()` `.startsWith()` → `.startswith()` |
 
 ---
 
@@ -606,3 +688,8 @@ These items are marked as TBD above. Please review and fill in your preferences:
 | 8 | Minimum Python version | 3.8 (no match), 3.10+ (match/case for `sw`) | |
 | 9 | Forward function calls | Allow calling `fn` before definition? (requires two-pass parse) | |
 | 10 | String interpolation | Plain concat `+` only, or template strings like `` `Hello {name}` `` | |
+| 11 | Ternary syntax | `a if cond el b` (Rattled-native) vs. `cond ? a : b` (C-style) | |
+| 12 | Lambda syntax | `lam x -> expr` vs. `fn(x) { ret expr }` (anonymous fn) | |
+| 13 | Variadic args | `...args` (JS-style spread) vs. `*args` (Python-style) | |
+| 14 | Augmented assignment | `+=` `-=` `*=` `/=` (standard symbols — no real alternative) | |
+| 15 | For-each vs range-for | Same `for x in y` keyword for both collection iteration and range? | |

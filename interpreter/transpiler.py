@@ -3,15 +3,6 @@
 #
 # Walks the AST produced by the Parser and emits valid Python 3 source code.
 #
-# Features
-#   - pr auto-cast: "Name: " + age works without str(age)
-#   - String interpolation: "Hello {name}" emits f"Hello {name}"
-#   - for range form: for i in 0..10 emits for i in range(0, 10):
-#   - brk / cont: break / continue
-#   - stat fn: @staticmethod decorator on class methods
-#   - Typed catch: catch ValueError { } -> except ValueError:
-#   - Line-number annotations: # ry:N on every emitted statement
-#
 import re
 import sys
 import os
@@ -36,13 +27,15 @@ class TranspileError(Exception):
 
 class Transpiler:
     def __init__(self, filename='<input>'):
-        self.filename   = filename
-        self._lines     = []
-        self._indent    = 0
-        self._fn_depth  = 0          # >0 when inside a function/method
-        self._scopes    = [set()]    # stack of declared-var name sets
-        self._needs_sys = False
-        self._used_std  = set()
+        self.filename      = filename
+        self._lines        = []
+        self._indent       = 0
+        self._fn_depth     = 0
+        self._scopes       = [set()]
+        self._needs_sys    = False
+        self._needs_abc    = False
+        self._used_std     = set()
+        self._anon_counter = 0
 
     # ═══════════════════════════════════════════════════════════════
     # Public interface
@@ -57,6 +50,8 @@ class Transpiler:
         prelude = []
         if self._needs_sys:
             prelude.append('import sys')
+        if self._needs_abc:
+            prelude.append('from abc import ABC, abstractmethod')
         if self._used_std:
             prelude.append(RATTLED_STD)
 
@@ -67,8 +62,7 @@ class Transpiler:
     # ═══════════════════════════════════════════════════════════════
 
     def _emit(self, line, ry_line=0):
-        """Emit one Python line, optionally annotated with the Rattled source line."""
-        indent = '    ' * self._indent
+        indent     = '    ' * self._indent
         annotation = '  # ry:{}'.format(ry_line) if ry_line else ''
         self._lines.append('{}{}{}'.format(indent, line, annotation))
 
@@ -97,12 +91,19 @@ class Transpiler:
     # ═══════════════════════════════════════════════════════════════
 
     def _stmt(self, node):
-        ry = getattr(node, 'line', 0)   # Rattled source line for annotation
+        ry = getattr(node, 'line', 0)
 
         if isinstance(node, AssignNode):
             lhs = self._lhs(node.lhs)
             rhs = self._expr(node.rhs)
             self._emit('{} = {}'.format(lhs, rhs), ry)
+            if isinstance(node.lhs, IdentNode):
+                self._track(node.lhs.name)
+
+        elif isinstance(node, AugAssignNode):
+            lhs = self._lhs(node.lhs)
+            rhs = self._expr(node.rhs)
+            self._emit('{} {} {}'.format(lhs, node.op, rhs), ry)
             if isinstance(node.lhs, IdentNode):
                 self._track(node.lhs.name)
 
@@ -120,20 +121,26 @@ class Transpiler:
             self._emit('print({})'.format(self._pr_expr(node.expr)), ry)
 
         elif isinstance(node, ReadFileNode):
-            self._emit('open({}, "r").read()'.format(self._expr(node.path_expr)), ry)
+            self._emit('open({}, "r").read()'.format(
+                self._expr(node.path_expr)), ry)
 
         elif isinstance(node, WriteFileNode):
             self._emit('open({}, "w").write({})'.format(
-                self._expr(node.path_expr), self._expr(node.content_expr)), ry)
+                self._expr(node.path_expr),
+                self._expr(node.content_expr)), ry)
 
         elif isinstance(node, FlushNode):
             self._needs_sys = True
             self._emit('sys.stdout.flush()', ry)
 
         elif isinstance(node, ImportNode):
-            if node.names:
+            if node.names == ['*']:
+                self._emit('from {} import *'.format(node.module), ry)
+            elif node.names:
                 self._emit('from {} import {}'.format(
                     node.module, ', '.join(node.names)), ry)
+            elif node.alias:
+                self._emit('import {} as {}'.format(node.module, node.alias), ry)
             else:
                 self._emit('import {}'.format(node.module), ry)
 
@@ -142,6 +149,18 @@ class Transpiler:
                 self._emit('return', ry)
             else:
                 self._emit('return {}'.format(self._expr(node.expr)), ry)
+
+        elif isinstance(node, YieldNode):
+            if node.expr is None:
+                self._emit('yield', ry)
+            else:
+                self._emit('yield {}'.format(self._expr(node.expr)), ry)
+
+        elif isinstance(node, ThrowNode):
+            if node.expr is None:
+                self._emit('raise', ry)
+            else:
+                self._emit('raise {}'.format(self._expr(node.expr)), ry)
 
         elif isinstance(node, BreakNode):
             self._emit('break', ry)
@@ -173,6 +192,31 @@ class Transpiler:
                 self._emit('pass')
             self._leave_scope()
 
+        elif isinstance(node, ForEachNode):
+            self._emit('for {} in {}:'.format(
+                node.var, self._expr(node.iterable)), ry)
+            self._enter_scope()
+            self._track(node.var)
+            for s in node.body:
+                self._stmt(s)
+            if not node.body:
+                self._emit('pass')
+            self._leave_scope()
+
+        elif isinstance(node, ForEachPairsNode):
+            # Iterate dict items: for k, v in myMap { }
+            self._emit('for {}, {} in {}.items():'.format(
+                node.key_var, node.val_var,
+                self._expr(node.iterable)), ry)
+            self._enter_scope()
+            self._track(node.key_var)
+            self._track(node.val_var)
+            for s in node.body:
+                self._stmt(s)
+            if not node.body:
+                self._emit('pass')
+            self._leave_scope()
+
         elif isinstance(node, WhileNode):
             self._emit('while {}:'.format(self._expr(node.cond)), ry)
             self._emit_block(node.body)
@@ -193,9 +237,18 @@ class Transpiler:
         elif isinstance(node, TryCatchNode):
             self._emit('try:', ry)
             self._emit_block(node.try_body)
-            exc = node.exc_type if node.exc_type else 'Exception'
-            self._emit('except {}:'.format(exc))
+            if node.exc_types:
+                if len(node.exc_types) == 1:
+                    exc_str = node.exc_types[0]
+                else:
+                    exc_str = '({})'.format(', '.join(node.exc_types))
+                self._emit('except {}:'.format(exc_str))
+            else:
+                self._emit('except Exception:')
             self._emit_block(node.catch_body)
+            if node.finally_body is not None:
+                self._emit('finally:')
+                self._emit_block(node.finally_body)
 
         elif isinstance(node, ExprStmtNode):
             self._do_expr_stmt(node.expr, ry)
@@ -223,11 +276,25 @@ class Transpiler:
     # ── class ─────────────────────────────────────────────────────
 
     def _do_class(self, node, ry=0):
-        header = 'class {}({}):'.format(node.name, node.parent) \
-                 if node.parent else 'class {}:'.format(node.name)
+        parents = list(node.parents)
+        if node.is_abstract:
+            self._needs_abc = True
+            if 'ABC' not in parents:
+                parents.insert(0, 'ABC')
+
+        if parents:
+            header = 'class {}({}):'.format(node.name, ', '.join(parents))
+        else:
+            header = 'class {}:'.format(node.name)
         self._emit(header, ry)
         self._enter_scope()
         wrote = False
+
+        # Static variables first (class-level attributes)
+        for m in node.methods:
+            if isinstance(m, StaticVarNode):
+                self._emit('{} = {}'.format(m.name, self._expr(m.value)))
+                wrote = True
 
         if node.constructor:
             c      = node.constructor
@@ -238,16 +305,37 @@ class Transpiler:
             self._fn_depth -= 1
             wrote = True
 
-        for meth in node.methods:
-            if meth.is_static:
-                self._emit('@staticmethod')
-                params = self._fmt_params(meth.params)
-            else:
-                params = self._class_params(meth.params)
-            self._emit('def {}({}):'.format(meth.name, params))
-            self._fn_depth += 1
-            self._emit_block(meth.body)
-            self._fn_depth -= 1
+        for m in node.methods:
+            if isinstance(m, StaticVarNode):
+                continue   # already emitted above
+
+            if isinstance(m, MethodNode):
+                if m.is_abstract:
+                    self._emit('@abstractmethod')
+                if m.is_static:
+                    self._emit('@staticmethod')
+                    params = self._fmt_params(m.params)
+                else:
+                    params = self._class_params(m.params)
+                self._emit('def {}({}):'.format(m.name, params))
+                self._fn_depth += 1
+                self._emit_block(m.body)
+                self._fn_depth -= 1
+
+            elif isinstance(m, GetterNode):
+                self._emit('@property')
+                self._emit('def {}(self):'.format(m.name))
+                self._fn_depth += 1
+                self._emit_block(m.body)
+                self._fn_depth -= 1
+
+            elif isinstance(m, SetterNode):
+                self._emit('@{}.setter'.format(m.name))
+                self._emit('def {}(self, {}):'.format(m.name, m.param))
+                self._fn_depth += 1
+                self._emit_block(m.body)
+                self._fn_depth -= 1
+
             wrote = True
 
         if not wrote:
@@ -312,28 +400,14 @@ class Transpiler:
     # ═══════════════════════════════════════════════════════════════
 
     def _pr_expr(self, node):
-        """
-        Render an expression for use in a pr statement.
-        If the expression is a + chain containing at least one string literal,
-        each non-string segment is automatically wrapped in str() so that
-        pr "Name: " + name + " age: " + age works without explicit casting.
-
-        Crucially, arithmetic sub-expressions that have no string literals
-        are kept as a unit (not recursed into), so that:
-          pr "result = " + (a + b)  →  print('result = ' + str(a + b))
-        and NOT:
-          print('result = ' + str(a) + str(b))   # wrong: gives "103" for 10+3
-        """
         if isinstance(node, BinOpNode) and node.op == '+':
             if self._chain_has_string(node):
                 parts    = self._collect_concat_parts(node)
                 rendered = [self._pr_auto_wrap(p) for p in parts]
                 return ' + '.join(rendered)
-        # Single value: Python's print() handles any type natively.
         return self._expr(node)
 
     def _chain_has_string(self, node):
-        """True if the + chain contains at least one StringNode."""
         if isinstance(node, StringNode):
             return True
         if isinstance(node, BinOpNode) and node.op == '+':
@@ -342,10 +416,8 @@ class Transpiler:
         return False
 
     def _pr_auto_wrap(self, part):
-        """Wrap a concat-chain segment in str() — unless it already returns a string."""
         if isinstance(part, StringNode):
             return self._render_string(part)
-        # Avoid str(str(x)) when the user already wrote str(x) explicitly.
         if (isinstance(part, CallNode)
                 and isinstance(part.callee, IdentNode)
                 and part.callee.name == 'str'):
@@ -353,18 +425,10 @@ class Transpiler:
         return 'str({})'.format(self._expr(part))
 
     def _collect_concat_parts(self, node):
-        """
-        Flatten the string-concat portion of a + chain into a flat list.
-        Recurses into a child + node only when that child itself contains a
-        string literal (i.e. is also a string-concat +).  Arithmetic +
-        expressions that contain no string literals are left as a single unit,
-        ensuring pr "sum = " + (a + b) → str(a + b) not str(a) + str(b).
-        """
         if isinstance(node, BinOpNode) and node.op == '+':
             if self._chain_has_string(node.left) or self._chain_has_string(node.right):
                 return (self._collect_concat_parts(node.left)
                         + self._collect_concat_parts(node.right))
-            # Neither side contains a string → arithmetic expression; keep whole
             return [node]
         return [node]
 
@@ -400,6 +464,56 @@ class Transpiler:
         if isinstance(node, UnaryOpNode):
             return '({} {})'.format(node.op, self._expr(node.operand))
 
+        if isinstance(node, TernaryNode):
+            cond = self._expr(node.cond)
+            then = self._expr(node.then_expr)
+            els  = self._expr(node.else_expr)
+            return '({} if {} else {})'.format(then, cond, els)
+
+        if isinstance(node, NullCoalNode):
+            left  = self._expr(node.left)
+            right = self._expr(node.right)
+            # Simple identifier — no double-evaluation concern
+            if isinstance(node.left, IdentNode):
+                return '({} if {} is not None else {})'.format(left, left, right)
+            # Complex expression — evaluate once with walrus (Python 3.8+)
+            tmp = '_ry_nc{}'.format(self._anon_counter)
+            self._anon_counter += 1
+            return '(({t} := {l}) if ({t} := {l}) is not None else {r})'.format(
+                t=tmp, l=left, r=right)
+
+        if isinstance(node, LambdaNode):
+            params_str = ', '.join(node.params)
+            body_str   = self._expr(node.body_expr)
+            return '(lambda {}: {})'.format(params_str, body_str)
+
+        if isinstance(node, AnonFnNode):
+            # If body is exactly one return statement, use lambda
+            if (len(node.body) == 1
+                    and isinstance(node.body[0], ReturnNode)
+                    and node.body[0].expr is not None):
+                params_str = self._fmt_params(node.params)
+                body_str   = self._expr(node.body[0].expr)
+                return '(lambda {}: {})'.format(params_str, body_str)
+            self._err(
+                'Multi-line anonymous functions must use a named function. '
+                'Use:  fn myName(params) { body }')
+
+        if isinstance(node, SpreadNode):
+            return '*{}'.format(self._expr(node.expr))
+
+        if isinstance(node, SliceNode):
+            return '{}:{}'.format(self._expr(node.start), self._expr(node.end))
+
+        if isinstance(node, ComprehensionNode):
+            expr_s     = self._expr(node.expr)
+            iter_s     = self._expr(node.iterable)
+            cond_s     = ' if {}'.format(self._expr(node.cond)) if node.cond else ''
+            return '[{} for {} in {}{}]'.format(expr_s, node.var, iter_s, cond_s)
+
+        if isinstance(node, KwargNode):
+            return '{}={}'.format(node.name, self._expr(node.value))
+
         if isinstance(node, CallNode):
             if isinstance(node.callee, IdentNode):
                 name    = node.callee.name
@@ -426,17 +540,27 @@ class Transpiler:
             return '{}.{}'.format(self._expr(node.obj), node.attr)
 
         if isinstance(node, IndexNode):
-            return '{}[{}]'.format(self._expr(node.obj), self._expr(node.index))
+            idx = node.index
+            if isinstance(idx, SliceNode):
+                return '{}[{}:{}]'.format(
+                    self._expr(node.obj),
+                    self._expr(idx.start),
+                    self._expr(idx.end))
+            return '{}[{}]'.format(self._expr(node.obj), self._expr(idx))
 
         if isinstance(node, ArrayNode):
-            elems = ', '.join(self._expr(e) for e in node.elements)
-            return '[{}]'.format(elems)
+            parts = []
+            for e in node.elements:
+                if isinstance(e, SpreadNode):
+                    parts.append('*{}'.format(self._expr(e.expr)))
+                else:
+                    parts.append(self._expr(e))
+            return '[{}]'.format(', '.join(parts))
 
         if isinstance(node, HashmapNode):
             pairs = ', '.join(
                 '{}: {}'.format(self._expr(k), self._expr(v))
-                for k, v in node.pairs
-            )
+                for k, v in node.pairs)
             return '{{{}}}'.format(pairs)
 
         if isinstance(node, InputExprNode):
@@ -462,15 +586,7 @@ class Transpiler:
     # ═══════════════════════════════════════════════════════════════
 
     def _render_string(self, node):
-        """
-        Render a StringNode.
-        If the value contains {identifier} or {identifier.attr} patterns,
-        emit as a Python f-string so that "Hello {name}" works natively.
-        Users who need a literal brace must double it: {{  }}
-        """
         if _INTERP_RE.search(node.value):
-            # repr() produces a properly quoted/escaped Python string literal.
-            # Prepending 'f' turns it into an f-string.
             return 'f' + repr(node.value)
         return repr(node.value)
 
@@ -481,7 +597,9 @@ class Transpiler:
     def _fmt_params(self, params):
         parts = []
         for name, default in params:
-            if default is None:
+            if name.startswith('**') or name.startswith('*'):
+                parts.append(name)   # * / ** already in the name string
+            elif default is None:
                 parts.append(name)
             else:
                 parts.append('{}={}'.format(name, self._expr(default)))

@@ -7,7 +7,8 @@
 #   - Semicolons are silently discarded (they are optional statement terminators).
 #   - Backtick-delimited strings are comments: `like this`.
 #   - Hash (#) starts a line comment.
-#   - Multi-char operators are tokenized greedily (++ before +, etc.).
+#   - Multi-char operators are tokenized greedily (longest match first).
+#   - Triple-quoted strings (""" or ''') allow embedded newlines.
 #
 import sys
 import os
@@ -94,7 +95,7 @@ class Lexer:
                 self._eat()
                 continue
 
-            # ── string literals ──────────────────────────────────────────────
+            # ── string literals (including triple-quoted) ─────────────────────
             if c in '"\'':
                 tokens.append(self._read_string())
                 continue
@@ -109,23 +110,27 @@ class Lexer:
                 tokens.append(self._read_ident())
                 continue
 
-            # ── operators (greedy, multi-char first) ─────────────────────────
-            if c in '+-*/%=!<>&|':
-                tokens.append(self._read_op())
-                continue
-
-            # ── single-character punctuation (and .. range) ───────────────────
+            # ── dot / range / spread ─────────────────────────────────────────
             if c == '.':
-                # Check for range operator ..
-                if self._ch(1) == '.':
+                if self._ch(1) == '.' and self._ch(2) == '.':
+                    # ... spread operator
+                    tokens.append(Token(TT_OP, '...', self.line))
+                    self._eat(); self._eat(); self._eat()
+                elif self._ch(1) == '.':
+                    # .. range operator
                     tokens.append(Token(TT_RANGE, '..', self.line))
-                    self._eat()   # first dot
-                    self._eat()   # second dot
+                    self._eat(); self._eat()
                 else:
                     tokens.append(Token(TT_DOT, '.', self.line))
                     self._eat()
                 continue
 
+            # ── operators (greedy, multi-char first) ─────────────────────────
+            if c in '+-*/%=!<>&|~?':
+                tokens.append(self._read_op())
+                continue
+
+            # ── single-character punctuation ─────────────────────────────────
             punct = {
                 '{': TT_LBRACE, '}': TT_RBRACE,
                 '(': TT_LPAREN, ')': TT_RPAREN,
@@ -145,23 +150,42 @@ class Lexer:
     # ─── sub-readers ─────────────────────────────────────────────────────────
 
     def _read_string(self):
-        quote      = self._eat()
+        quote      = self._eat()   # ' or "
         start_line = self.line
-        chars      = []
-        esc_map    = {'n': '\n', 't': '\t', '\\': '\\', '"': '"', "'": "'"}
+
+        # ── detect triple-quote ───────────────────────────────────────────
+        triple = False
+        if self._ch() == quote and self._ch(1) == quote:
+            self._eat()   # second quote char
+            self._eat()   # third quote char
+            triple = True
+
+        chars   = []
+        esc_map = {'n': '\n', 't': '\t', '\\': '\\', '"': '"', "'": "'", 'r': '\r'}
 
         while self.pos < len(self.src):
             c = self._eat()
-            if c == quote:
-                return Token(TT_STRING, ''.join(chars), start_line)
-            if c == '\\':
-                nxt = self._eat() if self.pos < len(self.src) else ''
-                chars.append(esc_map.get(nxt, '\\' + nxt))
-            elif c == '\n':
-                self.line += 1
-                chars.append('\n')
-            else:
+
+            if triple:
+                # Closing triple quote
+                if c == quote and self._ch() == quote and self._ch(1) == quote:
+                    self._eat()   # second closing quote
+                    self._eat()   # third closing quote
+                    return Token(TT_STRING, ''.join(chars), start_line)
+                if c == '\n':
+                    self.line += 1
                 chars.append(c)
+            else:
+                if c == quote:
+                    return Token(TT_STRING, ''.join(chars), start_line)
+                if c == '\\':
+                    nxt = self._eat() if self.pos < len(self.src) else ''
+                    chars.append(esc_map.get(nxt, '\\' + nxt))
+                elif c == '\n':
+                    self.line += 1
+                    chars.append('\n')
+                else:
+                    chars.append(c)
 
         self._err('Unterminated string literal (opened on line {})'.format(start_line))
 
@@ -198,16 +222,26 @@ class Lexer:
     def _read_op(self):
         line = self.line
         c    = self._eat()
-        n    = self._ch()
+        n    = self._ch()     # next char (may be None)
+        nn   = self._ch(1)    # char after next (may be None)
 
-        # two-character operators (check greedily)
+        # three-character operators (check greedily first)
+        three = c + (n or '') + (nn or '')
+        if three == '**=':
+            self._eat(); self._eat()
+            return Token(TT_OP, '**=', line)
+
+        # two-character operators
         two = c + (n or '')
-        if two in ('++', '--', '**', '==', '!=', '<=', '>=', '&&', '||'):
+        TWO_CHAR = ('++', '--', '**', '==', '!=', '<=', '>=', '&&', '||',
+                    '+=', '-=', '*=', '/=', '%=', '->', '??', '~~')
+        if two in TWO_CHAR:
             self._eat()
             return Token(TT_OP, two, line)
 
         # single-character operators
-        if c in '+-*/%=!<>':
+        if c in '+-*/%=!<>~?':
             return Token(TT_OP, c, line)
 
+        # & and | are only valid as part of && and ||
         self._err("Unknown operator character '{}'".format(c))
