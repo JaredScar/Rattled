@@ -32,9 +32,10 @@ class ParseError(Exception):
 
 class Parser:
     def __init__(self, tokens, filename='<input>'):
-        self.tokens   = tokens
-        self.filename = filename
-        self.pos      = 0
+        self.tokens        = tokens
+        self.filename      = filename
+        self.pos           = 0
+        self._last_line    = 1   # line of the most recently consumed token
 
     # ─── private helpers ─────────────────────────────────────────────────────
 
@@ -52,6 +53,7 @@ class Parser:
 
     def _eat(self):
         tok = self.tokens[self.pos]
+        self._last_line = tok.line
         self.pos += 1
         return tok
 
@@ -208,10 +210,11 @@ class Parser:
 
     def _parse_fn(self):
         self._eat()  # fn
-        name   = self._expect(TT_IDENT).value
-        params = self._parse_params()
-        body   = self._parse_block()
-        return FnDefNode(name, params, body)
+        name        = self._expect(TT_IDENT).value
+        params      = self._parse_params()
+        return_type = self._parse_return_type()
+        body        = self._parse_block()
+        return FnDefNode(name, params, body, return_type=return_type)
 
     def _parse_class(self, is_abstract=False):
         self._eat()  # Clas
@@ -247,8 +250,10 @@ class Parser:
                     self._eat()
                     mname  = self._expect(TT_IDENT).value
                     params = self._parse_params()
+                    ret_t  = self._parse_return_type()
                     body   = self._parse_block()
-                    methods.append(MethodNode(mname, params, body, is_static=True))
+                    methods.append(MethodNode(mname, params, body, is_static=True,
+                                              return_type=ret_t))
                 else:                                # static class variable
                     var_name = self._expect(TT_IDENT).value
                     self._expect_op('=')
@@ -260,15 +265,18 @@ class Parser:
                 self._expect_kw('fn')
                 mname  = self._expect(TT_IDENT).value
                 params = self._parse_params()
+                ret_t  = self._parse_return_type()
                 body   = self._parse_block()
-                methods.append(MethodNode(mname, params, body, is_abstract=True))
+                methods.append(MethodNode(mname, params, body, is_abstract=True,
+                                          return_type=ret_t))
 
             elif self._cur().is_kw('fn'):            # instance method
                 self._eat()
                 mname  = self._expect(TT_IDENT).value
                 params = self._parse_params()
+                ret_t  = self._parse_return_type()
                 body   = self._parse_block()
-                methods.append(MethodNode(mname, params, body))
+                methods.append(MethodNode(mname, params, body, return_type=ret_t))
 
             elif self._cur_is('get'):                # property getter
                 self._eat()   # 'get' (contextual — not a keyword)
@@ -348,7 +356,15 @@ class Parser:
         self._eat()  # ret
         if self._cur().type in (TT_RBRACE, TT_EOF):
             return ReturnNode(None)
-        return ReturnNode(self._parse_expr())
+        expr = self._parse_expr()
+        # Tuple return:  ret a, b, c  →  return (a, b, c)
+        if self._cur().type == TT_COMMA:
+            parts = [expr]
+            while self._cur().type == TT_COMMA:
+                self._eat()
+                parts.append(self._parse_expr())
+            return ReturnNode(ArrayNode(parts))
+        return ReturnNode(expr)
 
     def _parse_switch(self):
         self._eat()  # sw
@@ -362,9 +378,14 @@ class Parser:
                 self._err('Unexpected EOF inside switch block')
             if self._cur().is_kw('cs'):
                 self._eat()
-                val  = self._parse_expr()
+                val   = self._parse_expr()
+                guard = None
+                # Optional guard:  cs 5 if condition { }
+                if self._cur().is_kw('if'):
+                    self._eat()
+                    guard = self._parse_expr()
                 body = self._parse_block()
-                cases.append((val, body))
+                cases.append((val, guard, body))
             elif self._cur().is_kw('def'):
                 self._eat()
                 default_body = self._parse_block()
@@ -410,8 +431,43 @@ class Parser:
     def _parse_expr_stmt(self):
         """
         Assignment, augmented assignment, increment/decrement, or expression.
+        Also handles:
+          - Tuple destructuring:  a, b = expr
+          - Variable type annotation:  x: int = 5  or  x: int
         """
         expr = self._parse_expr()
+
+        # Tuple destructuring:  a, b = expr  or  a, b = v1, v2
+        if self._cur().type == TT_COMMA:
+            targets = [expr]
+            while self._cur().type == TT_COMMA:
+                self._eat()
+                targets.append(self._parse_expr())
+            self._expect_op('=')
+            rhs = self._parse_expr()
+            # RHS may itself be a comma-separated tuple:  a, b = 1, 2
+            if self._cur().type == TT_COMMA:
+                rhs_parts = [rhs]
+                while self._cur().type == TT_COMMA:
+                    self._eat()
+                    rhs_parts.append(self._parse_expr())
+                rhs = ArrayNode(rhs_parts)
+            return AssignNode(ArrayNode(targets), rhs)
+
+        # Variable type annotation:  x: int = 5  or  x: int
+        if (isinstance(expr, IdentNode) and self._cur().type == TT_COLON):
+            self._eat()  # :
+            type_ann = self._expect(TT_IDENT).value
+            if self._cur().type == TT_LBRACKET:
+                self._eat()
+                inner = self._expect(TT_IDENT).value
+                self._expect(TT_RBRACKET)
+                type_ann = '{}[{}]'.format(type_ann, inner)
+            if self._cur().is_op('='):
+                self._eat()
+                rhs = self._parse_expr()
+                return AnnotatedAssignNode(expr, type_ann, rhs)
+            return AnnotatedAssignNode(expr, type_ann, None)
 
         # Regular assignment
         if self._cur().is_op('='):
@@ -445,9 +501,9 @@ class Parser:
 
     def _parse_params(self):
         """
-        Parse (p1, p2=default, ...args, ~~kwargs)
-        Variadic params are stored with a * / ** prefix in the name string so
-        _fmt_params() can emit them correctly without changing the tuple shape.
+        Parse (p1, p2: int = 0, ...args, ~~kwargs)
+        Each param is a 3-tuple: (name, default_or_None, type_ann_or_None)
+        Variadic params use a * / ** prefix in the name string.
         """
         self._expect(TT_LPAREN)
         params = []
@@ -455,22 +511,46 @@ class Parser:
             if self._cur().type == TT_OP and self._cur().value == '...':
                 self._eat()   # ...
                 name = '*' + self._expect(TT_IDENT).value
-                params.append((name, None))
+                params.append((name, None, None))
             elif self._cur().type == TT_OP and self._cur().value == '~~':
                 self._eat()   # ~~
                 name = '**' + self._expect(TT_IDENT).value
-                params.append((name, None))
+                params.append((name, None, None))
             else:
-                name    = self._expect(TT_IDENT).value
-                default = None
+                name     = self._expect(TT_IDENT).value
+                type_ann = None
+                default  = None
+                # Optional type annotation:  name: Type
+                if self._cur().type == TT_COLON:
+                    self._eat()  # :
+                    type_ann = self._expect(TT_IDENT).value
+                    if self._cur().type == TT_LBRACKET:
+                        self._eat()
+                        inner = self._expect(TT_IDENT).value
+                        self._expect(TT_RBRACKET)
+                        type_ann = '{}[{}]'.format(type_ann, inner)
+                # Optional default value
                 if self._cur().is_op('='):
                     self._eat()
                     default = self._parse_expr()
-                params.append((name, default))
+                params.append((name, default, type_ann))
             if self._cur().type == TT_COMMA:
                 self._eat()
         self._expect(TT_RPAREN)
         return params
+
+    def _parse_return_type(self):
+        """Parse optional  -> TypeName  after a parameter list. Returns str or None."""
+        if self._cur().type == TT_OP and self._cur().value == '->':
+            self._eat()  # ->
+            ret_t = self._expect(TT_IDENT).value
+            if self._cur().type == TT_LBRACKET:
+                self._eat()
+                inner = self._expect(TT_IDENT).value
+                self._expect(TT_RBRACKET)
+                ret_t = '{}[{}]'.format(ret_t, inner)
+            return ret_t
+        return None
 
     def _parse_args(self):
         """Parse (arg1, name=val, ...spread, ...)  →  [expr|KwargNode|SpreadNode, ...]"""
@@ -565,7 +645,9 @@ class Parser:
                 else:
                     node = AttrNode(node, attr)
 
-            elif tok.type == TT_LBRACKET:
+            elif tok.type == TT_LBRACKET and tok.line == self._last_line:
+                # Only treat [ as index/slice when on the same line as the object.
+                # This prevents  expr\n[a, b] = rhs  being read as  expr[a, b].
                 self._eat()   # [
                 idx = self._parse_expr()
                 # Slice:  obj[start..end]
@@ -728,21 +810,62 @@ class Parser:
 
     def _parse_hashmap_literal(self):
         self._expect(TT_LBRACE)
-        pairs = []
-        while self._cur().type != TT_RBRACE:
+
+        # Empty hashmap
+        if self._cur().type == TT_RBRACE:
+            self._eat()
+            return HashmapNode([])
+
+        # Parse first key
+        key_tok = self._cur()
+        if key_tok.type == TT_IDENT:
+            key = StringNode(key_tok.value); self._eat()
+        elif key_tok.type == TT_STRING:
+            key = StringNode(key_tok.value); self._eat()
+        elif key_tok.type == TT_INT:
+            key = IntNode(key_tok.value); self._eat()
+        else:
+            self._err('Expected hashmap key, got {!r}'.format(key_tok.value))
+        self._expect(TT_COLON)
+        val = self._parse_expr()
+
+        # Dict comprehension:  {key: val for var [, var2] in iterable [if cond]}
+        if self._cur().is_kw('for'):
+            self._eat()  # for
+            k_var = self._expect(TT_IDENT).value
+            v_var = None
+            if self._cur().type == TT_COMMA:
+                self._eat()
+                v_var = self._expect(TT_IDENT).value
+            self._expect_kw('in')
+            iterable = self._parse_expr()
+            cond = None
+            if self._cur().is_kw('if'):
+                self._eat()
+                cond = self._parse_expr()
+            self._expect(TT_RBRACE)
+            # In dict comprehension context, a bare identifier key is a variable ref
+            # (e.g.  {w: len(w) for w in lst}  — w is the loop variable, not "w")
+            comp_key = IdentNode(key_tok.value) if key_tok.type == TT_IDENT else key
+            return DictComprehensionNode(comp_key, val, k_var, v_var, iterable, cond)
+
+        # Regular hashmap: accumulate rest of pairs
+        pairs = [(key, val)]
+        while self._cur().type == TT_COMMA:
+            self._eat()
+            if self._cur().type == TT_RBRACE:
+                break
             key_tok = self._cur()
             if key_tok.type == TT_IDENT:
-                key = StringNode(key_tok.value); self._eat()
+                k = StringNode(key_tok.value); self._eat()
             elif key_tok.type == TT_STRING:
-                key = StringNode(key_tok.value); self._eat()
+                k = StringNode(key_tok.value); self._eat()
             elif key_tok.type == TT_INT:
-                key = IntNode(key_tok.value); self._eat()
+                k = IntNode(key_tok.value); self._eat()
             else:
                 self._err('Expected hashmap key, got {!r}'.format(key_tok.value))
             self._expect(TT_COLON)
-            val = self._parse_expr()
-            pairs.append((key, val))
-            if self._cur().type == TT_COMMA:
-                self._eat()
+            v = self._parse_expr()
+            pairs.append((k, v))
         self._expect(TT_RBRACE)
         return HashmapNode(pairs)

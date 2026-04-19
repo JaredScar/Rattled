@@ -693,3 +693,22 @@ These items are marked as TBD above. Please review and fill in your preferences:
 | 13 | Variadic args | `...args` (JS-style spread) vs. `*args` (Python-style) | |
 | 14 | Augmented assignment | `+=` `-=` `*=` `/=` (standard symbols — no real alternative) | |
 | 15 | For-each vs range-for | Same `for x in y` keyword for both collection iteration and range? | |
+
+---
+
+### Phase 7 — Polish & Completeness ✅ Complete
+
+Remaining gaps identified after Phase 6.
+
+| Feature | Rattled syntax | Python equivalent | Status |
+|---------|---------------|-------------------|--------|
+| **Destructuring assignment** | `[a, b] = expr` · `a, b = expr` · `[first, ...rest] = arr` | tuple/starred unpack | ✅ done |
+| **Tuple return** | `ret a, b` | `return (a, b)` | ✅ done |
+| **Dict comprehension** | `{k: v for k, v in hashm}` · `{k: v for k in arr [if cond]}` | dict comprehension | ✅ done |
+| **Pattern match guards** | `cs val if guard { }` | equality + guard condition | ✅ done |
+| **Type-check case** | `cs str { }` / `cs int { }` / `cs MyClass { }` | `isinstance(x, str)` | ✅ done |
+| **Type hints — params** | `fn foo(x: int, y: str) { }` | `def foo(x: int, y: str):` | ✅ done |
+| **Type hints — return** | `fn foo(x) -> int { }` | `def foo(x) -> int:` | ✅ done |
+| **Type hints — variables** | `x: int = 5` | `x: int = 5` | ✅ done |
+| **Runtime .ry line numbers** | Runtime errors show `.ry:N` not Python line | traceback mapping | ✅ done |
+| **Import .ry modules** | `imp myUtils` where `myUtils.ry` exists nearby | compile + inject into `sys.modules` | ✅ done |

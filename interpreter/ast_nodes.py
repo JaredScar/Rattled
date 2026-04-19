@@ -151,12 +151,21 @@ class WhileNode:
         self.body = body
 
 
+class AnnotatedAssignNode:
+    """x: Type = expr  (variable type annotation with optional value)"""
+    def __init__(self, target, type_ann, rhs=None):
+        self.target   = target     # IdentNode
+        self.type_ann = type_ann   # str
+        self.rhs      = rhs        # expr or None
+
+
 class FnDefNode:
     """fn name(params) { body }  →  def name(params):"""
-    def __init__(self, name, params, body):
-        self.name   = name
-        self.params = params    # [(name_str, default_expr_or_None), ...]
-        self.body   = body
+    def __init__(self, name, params, body, return_type=None):
+        self.name        = name
+        self.params      = params       # [(name, default, type_ann|None), ...]
+        self.body        = body
+        self.return_type = return_type  # str or None
 
 
 class ConstructorNode:
@@ -168,12 +177,14 @@ class ConstructorNode:
 
 class MethodNode:
     """fn / stat fn / abst fn inside a Clas block"""
-    def __init__(self, name, params, body, is_static=False, is_abstract=False):
+    def __init__(self, name, params, body, is_static=False, is_abstract=False,
+                 return_type=None):
         self.name        = name
         self.params      = params
         self.body        = body
         self.is_static   = is_static
         self.is_abstract = is_abstract
+        self.return_type = return_type
 
 
 class GetterNode:
@@ -209,10 +220,10 @@ class ClassNode:
 
 
 class SwitchNode:
-    """sw expr { cs val { body } ... [def { body }] }"""
+    """sw expr { cs val [if guard] { body } ... [def { body }] }"""
     def __init__(self, expr, cases, default_body):
         self.expr         = expr
-        self.cases        = cases
+        self.cases        = cases        # [(val_expr, guard_or_None, [stmt,...]), ...]
         self.default_body = default_body
 
 
@@ -360,6 +371,17 @@ class ComprehensionNode:
         self.var      = var       # str
         self.iterable = iterable
         self.cond     = cond      # expression node or None
+
+
+class DictComprehensionNode:
+    """{key: val for k[, v] in iterable [if cond]}  →  Python dict comprehension"""
+    def __init__(self, key_expr, val_expr, key_var, val_var, iterable, cond=None):
+        self.key_expr  = key_expr
+        self.val_expr  = val_expr
+        self.key_var   = key_var   # str
+        self.val_var   = val_var   # str or None (single-var form)
+        self.iterable  = iterable
+        self.cond      = cond
 
 
 class CallNode:

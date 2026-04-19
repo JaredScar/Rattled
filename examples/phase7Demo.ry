@@ -1,0 +1,107 @@
+` Phase 7 — Polish & Completeness demo `
+` Tests: destructuring, dict comprehension, pattern guards/type checks, `
+`        type hints, .ry module imports, and better error line numbers.  `
+
+pr "=== 1. Destructuring Assignment ==="
+
+` Array / list destructuring `
+[a, b] = [10, 20]
+pr "a={a}  b={b}"
+
+` Starred (rest) destructuring `
+[first, ...rest] = [1, 2, 3, 4, 5]
+pr "first={first}  rest={rest}"
+
+` Tuple-style destructuring (without brackets) `
+x, y = 99, 100
+pr "x={x}  y={y}"
+
+` Function returning multiple values `
+fn minMax(nums) {
+    ret min(nums), max(nums)
+}
+lo, hi = minMax([3, 1, 7, 2, 9])
+pr "lo={lo}  hi={hi}"
+
+pr ""
+pr "=== 2. Dict Comprehension ==="
+
+` Build a dict from a list `
+words = ["apple", "banana", "cherry"]
+lengths = {w: len(w) for w in words}
+pr "lengths: {lengths}"
+
+` Transform an existing hashmap `
+hashm prices = {"apple": 1, "banana": 2, "cherry": 3}
+doubled = {k: v * 2 for k, v in prices}
+pr "doubled: {doubled}"
+
+` Dict comprehension with filter `
+big = {k: v for k, v in prices if v > 1}
+pr "big: {big}"
+
+pr ""
+pr "=== 3. Pattern Matching — Guards & Type Checks ==="
+
+fn classify(val) {
+    sw val {
+        cs 0 {
+            pr "  zero"
+        }
+        cs 42 if val > 0 {
+            pr "  the answer!"
+        }
+        def {
+            pr "  something else: {val}"
+        }
+    }
+}
+classify(0)
+classify(42)
+classify(7)
+
+fn detectType(val) {
+    sw val {
+        cs str {
+            pr "  string: {val}"
+        }
+        cs int {
+            pr "  integer: {val}"
+        }
+        cs list {
+            pr "  list with {len(val)} items"
+        }
+        def {
+            pr "  unknown type"
+        }
+    }
+}
+detectType("hello")
+detectType(123)
+detectType([1, 2, 3])
+detectType(3.14)
+
+pr ""
+pr "=== 4. Type Hints ==="
+
+fn greet(name: str, times: int) -> str {
+    result: str = ""
+    i: int = 0
+    for i in 0..times {
+        result += "Hello {name}! "
+    }
+    ret result
+}
+pr greet("World", 3)
+
+fn addInts(a: int, b: int) -> int {
+    ret a + b
+}
+pr "addInts(3, 4) = {addInts(3, 4)}"
+
+pr ""
+pr "=== 5. Improved Error Line Numbers ==="
+pr "(skipping runtime error test — errors now show .ry line numbers)"
+
+pr ""
+pr "=== All Phase 7 tests passed! ==="

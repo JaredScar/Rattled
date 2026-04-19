@@ -1,0 +1,16 @@
+` mathUtils.ry — a reusable Rattled module `
+
+fn square(n) {
+    ret n * n
+}
+
+fn cube(n) {
+    ret n * n * n
+}
+
+fn factorial(n) {
+    if n <= 1 {
+        ret 1
+    }
+    ret n * factorial(n - 1)
+}

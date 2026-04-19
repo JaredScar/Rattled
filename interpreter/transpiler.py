@@ -18,7 +18,7 @@ except ImportError:
     from rattled_std import RATTLED_STD
 
 # Matches {identifier} or {identifier.attr} inside strings — triggers f-string
-_INTERP_RE = re.compile(r'\{(\w[\w.]*)\}')
+_INTERP_RE = re.compile(r'\{(\w[^}]*)\}')
 
 
 class TranspileError(Exception):
@@ -93,7 +93,16 @@ class Transpiler:
     def _stmt(self, node):
         ry = getattr(node, 'line', 0)
 
-        if isinstance(node, AssignNode):
+        if isinstance(node, AnnotatedAssignNode):
+            name_s = node.target.name
+            if node.rhs is not None:
+                self._emit('{}: {} = {}'.format(
+                    name_s, node.type_ann, self._expr(node.rhs)), ry)
+                self._track(name_s)
+            else:
+                self._emit('{}: {}'.format(name_s, node.type_ann), ry)
+
+        elif isinstance(node, AssignNode):
             lhs = self._lhs(node.lhs)
             rhs = self._expr(node.rhs)
             self._emit('{} = {}'.format(lhs, rhs), ry)
@@ -223,7 +232,8 @@ class Transpiler:
 
         elif isinstance(node, FnDefNode):
             params_str = self._fmt_params(node.params)
-            self._emit('def {}({}):'.format(node.name, params_str), ry)
+            ret_ann    = ' -> {}'.format(node.return_type) if node.return_type else ''
+            self._emit('def {}({}){}:'.format(node.name, params_str, ret_ann), ry)
             self._fn_depth += 1
             self._emit_block(node.body)
             self._fn_depth -= 1
@@ -317,7 +327,8 @@ class Transpiler:
                     params = self._fmt_params(m.params)
                 else:
                     params = self._class_params(m.params)
-                self._emit('def {}({}):'.format(m.name, params))
+                ret_ann = ' -> {}'.format(m.return_type) if m.return_type else ''
+                self._emit('def {}({}){}:'.format(m.name, params, ret_ann))
                 self._fn_depth += 1
                 self._emit_block(m.body)
                 self._fn_depth -= 1
@@ -352,10 +363,25 @@ class Transpiler:
     def _do_switch(self, node, ry=0):
         expr_py = self._expr(node.expr)
         first   = True
-        for val, body in node.cases:
+        for val, guard, body in node.cases:
             kw = 'if' if first else 'elif'
-            self._emit('{} {} == {}:'.format(kw, expr_py, self._expr(val)),
-                       ry if first else 0)
+            val_s = self._expr(val)
+            # Type-check case:  cs str { }  /  cs MyClass { }
+            # Detected when case value is a plain identifier that is either
+            # capitalised (user-defined class) or a known built-in type name.
+            _BUILTIN_TYPES = frozenset({
+                'str', 'int', 'float', 'bool', 'list', 'dict',
+                'tuple', 'set', 'bytes', 'bytearray',
+            })
+            is_type = (isinstance(val, IdentNode) and
+                       (val.name[:1].isupper() or val.name in _BUILTIN_TYPES))
+            if is_type:
+                condition = 'isinstance({}, {})'.format(expr_py, val_s)
+            else:
+                condition = '{} == {}'.format(expr_py, val_s)
+            if guard is not None:
+                condition = '({}) and ({})'.format(condition, self._expr(guard))
+            self._emit('{} {}:'.format(kw, condition), ry if first else 0)
             self._emit_block(body)
             first = False
         if node.default_body is not None:
@@ -393,6 +419,19 @@ class Transpiler:
             return '{}.{}'.format(self._expr(node.obj), node.attr)
         if isinstance(node, IndexNode):
             return '{}[{}]'.format(self._expr(node.obj), self._expr(node.index))
+        if isinstance(node, ArrayNode):
+            # Destructuring:  [a, b, ...rest] = expr  →  a, b, *rest = expr
+            parts = []
+            for e in node.elements:
+                if isinstance(e, SpreadNode):
+                    if not isinstance(e.expr, IdentNode):
+                        self._err('Spread in destructuring must be a simple name')
+                    parts.append('*' + e.expr.name)
+                elif isinstance(e, IdentNode):
+                    parts.append(e.name)
+                else:
+                    self._err('Destructuring targets must be identifiers')
+            return ', '.join(parts)
         self._err('Invalid assignment target: {}'.format(type(node).__name__))
 
     # ═══════════════════════════════════════════════════════════════
@@ -506,10 +545,23 @@ class Transpiler:
             return '{}:{}'.format(self._expr(node.start), self._expr(node.end))
 
         if isinstance(node, ComprehensionNode):
-            expr_s     = self._expr(node.expr)
-            iter_s     = self._expr(node.iterable)
-            cond_s     = ' if {}'.format(self._expr(node.cond)) if node.cond else ''
+            expr_s = self._expr(node.expr)
+            iter_s = self._expr(node.iterable)
+            cond_s = ' if {}'.format(self._expr(node.cond)) if node.cond else ''
             return '[{} for {} in {}{}]'.format(expr_s, node.var, iter_s, cond_s)
+
+        if isinstance(node, DictComprehensionNode):
+            k_s    = self._expr(node.key_expr)
+            v_s    = self._expr(node.val_expr)
+            iter_s = self._expr(node.iterable)
+            cond_s = ' if {}'.format(self._expr(node.cond)) if node.cond else ''
+            if node.val_var:
+                # Two-variable form  {k: v for k, v in d}  →  iterate dict items
+                return '{{{}: {} for {}, {} in {}.items(){}}}'.format(
+                    k_s, v_s, node.key_var, node.val_var, iter_s, cond_s)
+            else:
+                return '{{{}: {} for {} in {}{}}}'.format(
+                    k_s, v_s, node.key_var, iter_s, cond_s)
 
         if isinstance(node, KwargNode):
             return '{}={}'.format(node.name, self._expr(node.value))
@@ -596,13 +648,20 @@ class Transpiler:
 
     def _fmt_params(self, params):
         parts = []
-        for name, default in params:
+        for param in params:
+            name     = param[0]
+            default  = param[1] if len(param) > 1 else None
+            type_ann = param[2] if len(param) > 2 else None
             if name.startswith('**') or name.startswith('*'):
                 parts.append(name)   # * / ** already in the name string
+            elif type_ann and default is None:
+                parts.append('{}: {}'.format(name, type_ann))
+            elif type_ann and default is not None:
+                parts.append('{}: {} = {}'.format(name, type_ann, self._expr(default)))
             elif default is None:
                 parts.append(name)
             else:
-                parts.append('{}={}'.format(name, self._expr(default)))
+                parts.append('{} = {}'.format(name, self._expr(default)))
         return ', '.join(parts)
 
 

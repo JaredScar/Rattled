@@ -1,0 +1,5 @@
+` Test that runtime errors show .ry line numbers `
+x = 10
+y = 0
+z = x / y
+pr "This line never runs"

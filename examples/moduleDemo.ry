@@ -1,0 +1,8 @@
+` moduleDemo.ry — tests importing another .ry file `
+
+imp mathUtils
+
+pr "square(5)    = {mathUtils.square(5)}"
+pr "cube(3)      = {mathUtils.cube(3)}"
+pr "factorial(6) = {mathUtils.factorial(6)}"
+pr "Done!"
