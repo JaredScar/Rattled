@@ -1,0 +1,1284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Rattled — Language Reference</title>
+  <meta name="description" content="Complete language reference for the Rattled programming language." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:       #0d1117;
+      --bg2:      #161b22;
+      --bg3:      #1f2937;
+      --border:   #30363d;
+      --text:     #c9d1d9;
+      --heading:  #e6edf3;
+      --muted:    #8b949e;
+      --accent:   #ff6b35;
+      --accent2:  #ff8c5a;
+      --blue:     #58a6ff;
+      --green:    #3fb950;
+      --yellow:   #e3b341;
+      --sidebar-w: 260px;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.65;
+    }
+
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { color: var(--accent2); }
+
+    code {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: .87em;
+      background: var(--bg3);
+      color: var(--accent);
+      padding: .1em .4em;
+      border-radius: 4px;
+    }
+
+    /* ── TOP NAV ────────────────────────────────────────────────── */
+    .topnav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      height: 56px;
+      background: rgba(13,17,23,.94);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      padding: 0 1.5rem;
+      z-index: 200;
+      gap: 1rem;
+    }
+
+    .topnav-logo {
+      display: flex;
+      align-items: center;
+      gap: .5rem;
+      font-weight: 700;
+      color: var(--heading);
+      font-size: 1.05rem;
+      white-space: nowrap;
+    }
+
+    .topnav-sep { color: var(--border); }
+
+    .topnav-title {
+      color: var(--muted);
+      font-size: .9rem;
+    }
+
+    .topnav-right {
+      margin-left: auto;
+      display: flex;
+      gap: 1.2rem;
+      align-items: center;
+    }
+
+    .topnav-right a {
+      color: var(--muted);
+      font-size: .88rem;
+    }
+
+    .topnav-right a:hover { color: var(--heading); }
+
+    /* ── LAYOUT ─────────────────────────────────────────────────── */
+    .layout {
+      display: flex;
+      padding-top: 56px;
+      min-height: 100vh;
+    }
+
+    /* ── SIDEBAR ────────────────────────────────────────────────── */
+    .sidebar {
+      width: var(--sidebar-w);
+      flex-shrink: 0;
+      position: fixed;
+      top: 56px;
+      bottom: 0;
+      left: 0;
+      overflow-y: auto;
+      background: var(--bg2);
+      border-right: 1px solid var(--border);
+      padding: 1.5rem 0 3rem;
+    }
+
+    .sidebar::-webkit-scrollbar { width: 4px; }
+    .sidebar::-webkit-scrollbar-track { background: transparent; }
+    .sidebar::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+    .sidebar-group {
+      padding: 0 1rem;
+      margin-bottom: .3rem;
+    }
+
+    .sidebar-group-label {
+      font-size: .7rem;
+      font-weight: 700;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      color: var(--muted);
+      padding: .8rem .5rem .3rem;
+    }
+
+    .sidebar-link {
+      display: block;
+      padding: .35rem .75rem;
+      border-radius: 6px;
+      font-size: .875rem;
+      color: var(--text);
+      transition: all .15s;
+    }
+
+    .sidebar-link:hover, .sidebar-link.active {
+      background: rgba(255,107,53,.1);
+      color: var(--accent);
+    }
+
+    /* ── MAIN CONTENT ───────────────────────────────────────────── */
+    .content {
+      flex: 1;
+      margin-left: var(--sidebar-w);
+      max-width: calc(100% - var(--sidebar-w));
+      padding: 3rem 4rem 6rem;
+    }
+
+    @media (max-width: 900px) {
+      .sidebar { display: none; }
+      .content { margin-left: 0; max-width: 100%; padding: 2rem 1.5rem 4rem; }
+    }
+
+    /* ── SECTIONS ───────────────────────────────────────────────── */
+    .doc-section {
+      max-width: 800px;
+      margin: 0 auto 4rem;
+      padding-bottom: 3rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .doc-section:last-child { border-bottom: none; }
+
+    .doc-section h2 {
+      font-size: 1.7rem;
+      font-weight: 700;
+      color: var(--heading);
+      margin-bottom: 1rem;
+      padding-top: 1rem;
+    }
+
+    .doc-section h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: var(--heading);
+      margin: 1.8rem 0 .6rem;
+    }
+
+    .doc-section p {
+      margin-bottom: 1rem;
+      color: var(--text);
+    }
+
+    .doc-section ul, .doc-section ol {
+      padding-left: 1.4rem;
+      margin-bottom: 1rem;
+    }
+
+    .doc-section li { margin-bottom: .3rem; }
+
+    /* ── CODE BLOCKS ────────────────────────────────────────────── */
+    .code-block {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+      margin: 1rem 0;
+    }
+
+    .code-header {
+      background: var(--bg3);
+      border-bottom: 1px solid var(--border);
+      padding: .4rem 1rem;
+      font-size: .75rem;
+      color: var(--muted);
+      font-family: 'JetBrains Mono', monospace;
+      display: flex;
+      align-items: center;
+      gap: .6rem;
+    }
+
+    .code-header .lang-badge {
+      background: rgba(255,107,53,.15);
+      color: var(--accent);
+      padding: .1em .5em;
+      border-radius: 4px;
+      font-size: .7rem;
+      font-weight: 600;
+    }
+
+    .code-block pre {
+      margin: 0 !important;
+      border-radius: 0 !important;
+      background: var(--bg2) !important;
+      padding: 1.1rem 1.3rem !important;
+      font-size: .84rem !important;
+      line-height: 1.75 !important;
+    }
+
+    .code-block code {
+      font-family: 'JetBrains Mono', monospace !important;
+      background: transparent !important;
+      padding: 0 !important;
+      color: inherit !important;
+    }
+
+    /* ── CALLOUT BOXES ──────────────────────────────────────────── */
+    .callout {
+      display: flex;
+      gap: .8rem;
+      padding: 1rem 1.2rem;
+      border-radius: 8px;
+      margin: 1.2rem 0;
+      font-size: .9rem;
+    }
+
+    .callout-tip   { background: rgba(63,185,80,.08);  border: 1px solid rgba(63,185,80,.25);  }
+    .callout-note  { background: rgba(88,166,255,.08); border: 1px solid rgba(88,166,255,.25); }
+    .callout-warn  { background: rgba(227,179,65,.08); border: 1px solid rgba(227,179,65,.25); }
+
+    .callout-icon { font-size: 1.1rem; flex-shrink: 0; margin-top: .1rem; }
+
+    .callout p { margin: 0; }
+
+    /* ── SYNTAX TABLE ───────────────────────────────────────────── */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: .88rem;
+    }
+
+    th, td {
+      text-align: left;
+      padding: .6rem .9rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    th {
+      background: var(--bg2);
+      color: var(--heading);
+      font-weight: 600;
+    }
+
+    td code { font-size: .82rem; }
+
+    tr:last-child td { border-bottom: none; }
+
+    /* ── BADGE ──────────────────────────────────────────────────── */
+    .version-badge {
+      display: inline-block;
+      background: rgba(255,107,53,.15);
+      color: var(--accent);
+      border: 1px solid rgba(255,107,53,.3);
+      border-radius: 100px;
+      padding: .15rem .6rem;
+      font-size: .72rem;
+      font-weight: 700;
+      vertical-align: middle;
+      margin-left: .4rem;
+    }
+
+    /* ── PAGE HEADING ───────────────────────────────────────────── */
+    .page-header {
+      max-width: 800px;
+      margin: 0 auto 3rem;
+      padding-bottom: 2rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .page-header h1 {
+      font-size: 2.2rem;
+      font-weight: 700;
+      color: var(--heading);
+      margin-bottom: .5rem;
+    }
+
+    .page-header p { color: var(--muted); font-size: 1rem; }
+
+    /* ── INLINE KEYWORD ─────────────────────────────────────────── */
+    .kw   { color: #ff79c6; }
+    .fn   { color: #50fa7b; }
+    .str  { color: #f1fa8c; }
+    .num  { color: #bd93f9; }
+    .cmt  { color: var(--muted); font-style: italic; }
+  </style>
+</head>
+<body>
+
+<!-- ── TOP NAV ──────────────────────────────────────────────────── -->
+<header class="topnav">
+  <a href="index.html" class="topnav-logo">🐍 Rattled</a>
+  <span class="topnav-sep">/</span>
+  <span class="topnav-title">Language Reference</span>
+  <nav class="topnav-right">
+    <a href="index.html">Home</a>
+    <a href="https://github.com/your-username/Rattled" target="_blank">GitHub ↗</a>
+  </nav>
+</header>
+
+<!-- ── LAYOUT ───────────────────────────────────────────────────── -->
+<div class="layout">
+
+  <!-- ── SIDEBAR ────────────────────────────────────────────────── -->
+  <aside class="sidebar">
+    <div class="sidebar-group">
+      <div class="sidebar-group-label">Getting Started</div>
+      <a href="#install"     class="sidebar-link">Installation</a>
+      <a href="#quickstart"  class="sidebar-link">Quick Start</a>
+      <a href="#cli"         class="sidebar-link">CLI Reference</a>
+    </div>
+    <div class="sidebar-group">
+      <div class="sidebar-group-label">Language</div>
+      <a href="#variables"   class="sidebar-link">Variables &amp; Types</a>
+      <a href="#strings"     class="sidebar-link">Strings &amp; Interpolation</a>
+      <a href="#operators"   class="sidebar-link">Operators</a>
+      <a href="#control"     class="sidebar-link">Control Flow</a>
+      <a href="#switch"      class="sidebar-link">Switch / Case</a>
+      <a href="#functions"   class="sidebar-link">Functions</a>
+      <a href="#lambdas"     class="sidebar-link">Lambdas &amp; Closures</a>
+      <a href="#typehints"   class="sidebar-link">Type Hints</a>
+    </div>
+    <div class="sidebar-group">
+      <div class="sidebar-group-label">Collections</div>
+      <a href="#arrays"        class="sidebar-link">Arrays</a>
+      <a href="#hashmaps"      class="sidebar-link">Hashmaps</a>
+      <a href="#destructuring" class="sidebar-link">Destructuring</a>
+      <a href="#comprehensions"class="sidebar-link">Comprehensions</a>
+      <a href="#spread"        class="sidebar-link">Spread Operator</a>
+    </div>
+    <div class="sidebar-group">
+      <div class="sidebar-group-label">OOP</div>
+      <a href="#classes"     class="sidebar-link">Classes</a>
+      <a href="#inheritance" class="sidebar-link">Inheritance</a>
+      <a href="#abstract"    class="sidebar-link">Abstract Classes</a>
+      <a href="#properties"  class="sidebar-link">Properties</a>
+    </div>
+    <div class="sidebar-group">
+      <div class="sidebar-group-label">Advanced</div>
+      <a href="#errors"      class="sidebar-link">Error Handling</a>
+      <a href="#generators"  class="sidebar-link">Generators</a>
+      <a href="#imports"     class="sidebar-link">Imports &amp; Modules</a>
+      <a href="#rymodules"   class="sidebar-link">.ry Modules</a>
+    </div>
+    <div class="sidebar-group">
+      <div class="sidebar-group-label">Reference</div>
+      <a href="#stdlib"      class="sidebar-link">Standard Library</a>
+      <a href="#keywords"    class="sidebar-link">Keyword Reference</a>
+    </div>
+  </aside>
+
+  <!-- ── MAIN CONTENT ───────────────────────────────────────────── -->
+  <main class="content">
+
+    <div class="page-header">
+      <h1>Language Reference</h1>
+      <p>Complete reference for the Rattled programming language — syntax, semantics, and standard library.</p>
+    </div>
+
+    <!-- ─────────────── INSTALLATION ─────────────── -->
+    <section class="doc-section" id="install">
+      <h2>Installation</h2>
+      <p>Install Rattled from PyPI. Requires Python 3.8 or newer.</p>
+      <div class="code-block">
+        <div class="code-header"><span class="lang-badge">shell</span> terminal</div>
+        <pre><code class="language-bash">pip install rattled</code></pre>
+      </div>
+      <p>Or install from source (also sets up the <code>rattled</code> CLI command):</p>
+      <div class="code-block">
+        <div class="code-header"><span class="lang-badge">shell</span> terminal</div>
+        <pre><code class="language-bash">git clone https://github.com/your-username/Rattled
+cd Rattled
+pip install -e .
+# Windows one-click installer:
+install.bat</code></pre>
+      </div>
+      <div class="callout callout-note">
+        <span class="callout-icon">💡</span>
+        <p>The VS Code extension in <code>vscode-rattled/</code> provides syntax highlighting for <code>.ry</code> files. Install it by copying to your VS Code extensions folder or using <strong>Extensions: Install from VSIX</strong>.</p>
+      </div>
+    </section>
+
+    <!-- ─────────────── QUICK START ─────────────── -->
+    <section class="doc-section" id="quickstart">
+      <h2>Quick Start</h2>
+      <p>Create a file named <code>hello.ry</code> and run it:</p>
+      <div class="code-block">
+        <div class="code-header"><span class="lang-badge">.ry</span> hello.ry</div>
+        <pre><code class="language-rattled">` Your first Rattled program `
+name = "World"
+pr "Hello, {name}!"
+
+fn greet(person: str, times: int = 1) {
+    for i in 0..times {
+        pr "Hey {person}!"
+    }
+}
+
+greet("Rattled", 3)</code></pre>
+      </div>
+      <div class="code-block">
+        <div class="code-header"><span class="lang-badge">shell</span> run it</div>
+        <pre><code class="language-bash">rattled hello.ry</code></pre>
+      </div>
+    </section>
+
+    <!-- ─────────────── CLI ─────────────── -->
+    <section class="doc-section" id="cli">
+      <h2>CLI Reference</h2>
+      <table>
+        <tr><th>Command</th><th>Description</th></tr>
+        <tr><td><code>rattled file.ry</code></td><td>Compile and run a Rattled file</td></tr>
+        <tr><td><code>rattled file.ry --emit-python</code></td><td>Print the transpiled Python (don't run)</td></tr>
+        <tr><td><code>rattled file.ry --check</code></td><td>Lint only — report syntax errors without running</td></tr>
+        <tr><td><code>rattled</code></td><td>Start the interactive REPL</td></tr>
+      </table>
+      <div class="callout callout-tip">
+        <span class="callout-icon">✅</span>
+        <p>Use <code>--emit-python</code> to understand exactly what Python code Rattled generates from your source.</p>
+      </div>
+    </section>
+
+    <!-- ─────────────── VARIABLES ─────────────── -->
+    <section class="doc-section" id="variables">
+      <h2>Variables &amp; Types</h2>
+      <p>Variables are dynamically typed (like Python). Assign with <code>=</code>. No declaration keyword required.</p>
+      <div class="code-block">
+        <div class="code-header"><span class="lang-badge">.ry</span> variables</div>
+        <pre><code class="language-rattled">name    = "Rattled"
+version = 7
+pi      = 3.14159
+active  = TRUE
+nothing = null
+
+` Type casting functions `
+n = str(42)       ` "42"  `
+f = flo("3.14")   ` 3.14  `
+i = int(3.99)     ` 3     `
+b = boo(0)        ` False `</code></pre>
+      </div>
+
+      <h3>Global Variables</h3>
+      <p>Use <code>glo</code> to declare a variable in the global scope from inside a function:</p>
+      <div class="code-block">
+        <div class="code-header"><span class="lang-badge">.ry</span></div>
+        <pre><code class="language-rattled">count = 0
+
+fn increment() {
+    glo count
+    count += 1
+}</code></pre>
+      </div>
+    </section>
+
+    <!-- ─────────────── STRINGS ─────────────── -->
+    <section class="doc-section" id="strings">
+      <h2>Strings &amp; Interpolation</h2>
+      <p>Strings use double or single quotes. Embed expressions with <code>{...}</code>:</p>
+      <div class="code-block">
+        <div class="code-header"><span class="lang-badge">.ry</span></div>
+        <pre><code class="language-rattled">name  = "Alice"
+score = 95
+
+` Simple variable `
+pr "Name: {name}"
+
+` Expression `
+pr "Score: {score}"
+pr "Pass? {score >= 60}"
+
+` Function call `
+pr "Upper: {name.upper()}"
+pr "Add: {score + 5}"
+
+` Multi-line string `
+msg = """
+Hello {name},
+Your score is {score}.
+"""
+pr msg
+
+` pr auto-casts numbers to string `
+pr "Value = " + score    ` no str() needed `</code></pre>
+      </div>
+    </section>
+
+    <!-- ─────────────── OPERATORS ─────────────── -->
+    <section class="doc-section" id="operators">
+      <h2>Operators</h2>
+      <table>
+        <tr><th>Category</th><th>Operator</th><th>Description</th></tr>
+        <tr><td>Arithmetic</td><td><code>+ - * / % **</code></td><td>Add, subtract, multiply, divide, modulo, power</td></tr>
+        <tr><td>Comparison</td><td><code>== != &lt; &gt; &lt;= &gt;=</code></td><td>Returns boolean</td></tr>
+        <tr><td>Logical</td><td><code>&amp;&amp; || !</code></td><td>AND, OR, NOT</td></tr>
+        <tr><td>Augmented</td><td><code>+= -= *= /= %= **=</code></td><td>In-place arithmetic</td></tr>
+        <tr><td>Ternary</td><td><code>cond ? a : b</code></td><td>Conditional expression</td></tr>
+        <tr><td>Null coalescing</td><td><code>a ?? b</code></td><td>Returns <code>a</code> if not null, else <code>b</code></td></tr>
+        <tr><td>Range</td><td><code>a..b</code></td><td>Integer range (used in <code>for</code> and slices)</td></tr>
+        <tr><td>Spread</td><td><code>...arr</code></td><td>Expand array into arguments or literal</td></tr>
+        <tr><td>Increment/Decrement</td><td><code>x++ x--</code></td><td>Post-increment / post-decrement</td></tr>
+      </table>
+      <div class="code-block">
+        <div class="code-header"><span class="lang-badge">.ry</span> examples</div>
+        <pre><code class="language-rattled">` Null coalescing `
+timeout = config ?? 30
+
+` Ternary `
+label = score >= 60 ? "pass" : "fail"
+
+` Slice `
+items = [0, 1, 2, 3, 4, 5]
+mid   = items[1..4]    ` [1, 2, 3] `</code></pre>
+      </div>
+    </section>
+
+    <!-- ─────────────── CONTROL FLOW ─────────────── -->
+    <section class="doc-section" id="control">
+      <h2>Control Flow</h2>
+
+      <h3>if / elif / el</h3>
+      <div class="code-block">
+        <div class="code-header"><span class="lang-badge">.ry</span></div>
+        <pre><code class="language-rattled">if score >= 90 {
+    pr "A"
+} elif score >= 80 {
+    pr "B"
+} elif score >= 70 {
+    pr "C"
+} el {
+    pr "F"
+}</code></pre>
+      </div>
+
+      <h3>for — three forms</h3>
+      <div class="code-block">
+        <div class="code-header"><span class="lang-badge">.ry</span></div>
+        <pre><code class="language-rattled">` 1. Range (inclusive on both ends) `
+for i in 0..4 {
+    pr i    ` 0 1 2 3 4 `
+}
+
+` 2. Collection iteration `
+fruits = ["apple", "banana", "cherry"]
+for fruit in fruits {
+    pr fruit
+}
+
+` 3. Dict key-value iteration `
+hashm ages = {alice: 30, bob: 25}
+for name, age in ages {
+    pr "{name} is {age}"
+}
+
+` 4. Classic condition-based loop `
+for i = 0; i < 5; i++ {
+    pr i
+}</code></pre>
+      </div>
+
+      <h3>while</h3>
+      <div class="code-block">
+        <div class="code-header"><span class="lang-badge">.ry</span></div>
+        <pre><code class="language-rattled">i = 0
+while i < 10 {
+    if i % 2 == 0 { cont }    ` skip evens `
+    pr i
+    i++
+    if i == 7 { brk }         ` stop at 7 `
+}</code></pre>
+      </div>
+      <p>Use <code>brk</code> to break out of a loop and <code>cont</code> to skip to the next iteration.</p>
+    </section>
+
+    <!-- ─────────────── SWITCH ─────────────── -->
+    <section class="doc-section" id="switch">
+      <h2>Switch / Case</h2>
+      <p>The <code>sw</code>/<code>cs</code> statement supports equality checks, value guards, and type checks. Use <code>def</code> for a default/fallback branch.</p>
+      <div class="code-block">
+        <div class="code-header"><span class="lang-badge">.ry</span></div>
+        <pre><code class="language-rattled">` Value equality `
+sw day {
+    cs "Mon" { pr "Start of week" }
+    cs "Fri" { pr "End of week"   }
+    def      { pr "Midweek"       }
+}
+
+` Guard condition (if) `
+sw score {
+    cs 100          { pr "Perfect!" }
+    cs int if score >= 90 { pr "A grade" }
+    cs int if score >= 70 { pr "Pass"    }
+    def             { pr "Fail"     }
+}
+
+` Type-check case `
+fn describe(val) {
+    sw val {
+        cs str  { pr "string: {val}"    }
+        cs int  { pr "integer: {val}"   }
+        cs list { pr "list: {len(val)} items" }
+        def     { pr "unknown"          }
+    }
+}</code></pre>
+      </div>
+      <div class="callout callout-note">
+        <span class="callout-icon">💡</span>
+        <p>Type-check cases use <code>isinstance()</code> under the hood. Supported built-in types: <code>str</code>, <code>int</code>, <code>float</code>, <code>bool</code>, <code>list</code>, <code>dict</code>, <code>tuple</code>, <code>set</code>. Capitalised identifiers (e.g. <code>cs MyClass</code>) also trigger an isinstance check.</p>
+      </div>
+    </section>
+
+    <!-- ─────────────── FUNCTIONS ─────────────── -->
+    <section class="doc-section" id="functions">
+      <h2>Functions</h2>
+      <div class="code-block">
+        <div class="code-header"><span class="lang-badge">.ry</span></div>
+        <pre><code class="language-rattled">` Basic function `
+fn greet(name) {
+    pr "Hello, {name}!"
+}
+
+` Default parameter `
+fn power(base, exp = 2) {
+    ret base ** exp
+}
+
+` Variadic positional args `
+fn sum(...nums) {
+    total = 0
+    for n in nums { total += n }
+    ret total
+}
+
+` Variadic keyword args `
+fn config(~~opts) {
+    pr opts
+}
+
+config(debug = TRUE, timeout = 30)
+
+` Multiple return values `
+fn minMax(nums) {
+    ret min(nums), max(nums)
+}
+
+lo, hi = minMax([3, 1, 7, 2, 9])</code></pre>
+      </div>
+    </section>
+
+    <!-- ─────────────── LAMBDAS ─────────────── -->
+    <section class="doc-section" id="lambdas">
+      <h2>Lambdas &amp; Closures</h2>
+      <p>Rattled supports two lambda syntaxes:</p>
+      <div class="code-block">
+        <div class="code-header"><span class="lang-badge">.ry</span></div>
+        <pre><code class="language-rattled">` lam — single expression lambda `
+double = lam x -> x * 2
+add    = lam x, y -> x + y
+
+` Anonymous fn — multi-line body `
+square = fn(n) { ret n * n }
+
+` Used in higher-order contexts `
+nums = [5, 3, 8, 1, 9, 2]
+nums.sort(key = lam x -> -x)    ` descending `
+
+pairs = [("alice", 95), ("bob", 82)]
+pairs.sort(key = lam p -> p[1])  ` sort by score `
+
+` Comprehension with lambda transform `
+results = [lam x -> x * x applied for x in 1..5]
+` equivalent: `
+results = [x * x for x in 1..5]</code></pre>
+      </div>
+    </section>
+
+    <!-- ─────────────── TYPE HINTS ─────────────── -->
+    <section class="doc-section" id="typehints">
+      <h2>Type Hints <span class="version-badge">Phase 7</span></h2>
+      <p>Type annotations are optional and pass through as Python type hints. They have no runtime effect but enable static analysis tools like <code>mypy</code>.</p>
+      <div class="code-block">
+        <div class="code-header"><span class="lang-badge">.ry</span></div>
+        <pre><code class="language-rattled">` Parameter types `
+fn greet(name: str, count: int) {
+    for i in 0..count { pr "Hi {name}" }
+}
+
+` Return type `
+fn add(a: int, b: int) -> int {
+    ret a + b
+}
+
+` Variable annotation `
+score: int = 95
+name:  str = "Alice"
+
+` Generic types (List[int], Optional[str]) `
+fn first(items: list) -> str {
+    ret items[0]
+}</code></pre>
+      </div>
+    </section>
+
+    <!-- ─────────────── ARRAYS ─────────────── -->
+    <section class="doc-section" id="arrays">
+      <h2>Arrays</h2>
+      <p>Declare with <code>arr</code> or plain assignment. Arrays are Python lists under the hood.</p>
+      <div class="code-block">
+        <div class="code-header"><span class="lang-badge">.ry</span></div>
+        <pre><code class="language-rattled">arr nums = [1, 2, 3, 4, 5]
+
+` Access and mutate `
+first = nums[0]
+nums[0] = 10
+nums.push(6)
+nums.pop()
+
+` Slicing `
+slice = nums[1..3]    ` [2, 3]        `
+tail  = nums[2..4]    ` [3, 4]        `
+
+` Length `
+n = len(nums)
+
+` Built-in sorts `
+mergSor(nums)
+quikSor(nums)
+bubSor(nums)
+heapSor(nums)</code></pre>
+      </div>
+    </section>
+
+    <!-- ─────────────── HASHMAPS ─────────────── -->
+    <section class="doc-section" id="hashmaps">
+      <h2>Hashmaps</h2>
+      <p>Declare with <code>hashm</code> or plain assignment. Hashmaps are Python dicts.</p>
+      <div class="code-block">
+        <div class="code-header"><span class="lang-badge">.ry</span></div>
+        <pre><code class="language-rattled">hashm person = {name: "Alice", age: 30, active: TRUE}
+
+` Access `
+pr person["name"]
+pr person["age"]
+
+` Update `
+person["age"] = 31
+
+` Iterate `
+for key, value in person {
+    pr "{key}: {value}"
+}</code></pre>
+      </div>
+    </section>
+
+    <!-- ─────────────── DESTRUCTURING ─────────────── -->
+    <section class="doc-section" id="destructuring">
+      <h2>Destructuring Assignment <span class="version-badge">Phase 7</span></h2>
+      <div class="code-block">
+        <div class="code-header"><span class="lang-badge">.ry</span></div>
+        <pre><code class="language-rattled">` Basic array destructuring `
+[a, b, c] = [1, 2, 3]
+pr "a={a} b={b} c={c}"
+
+` Rest / spread in destructuring `
+[head, ...tail] = [10, 20, 30, 40, 50]
+pr "head={head}  tail={tail}"
+
+` Tuple-style (no brackets) `
+x, y = 100, 200
+pr "x={x}  y={y}"
+
+` Unpack function return values `
+fn rgb(hex) { ret 255, 128, 0 }
+r, g, b = rgb("#FF8000")
+
+` Swap two variables `
+a, b = b, a</code></pre>
+      </div>
+    </section>
+
+    <!-- ─────────────── COMPREHENSIONS ─────────────── -->
+    <section class="doc-section" id="comprehensions">
+      <h2>Comprehensions <span class="version-badge">Phase 7</span></h2>
+      <div class="code-block">
+        <div class="code-header"><span class="lang-badge">.ry</span></div>
+        <pre><code class="language-rattled">` List comprehension `
+squares = [x * x for x in 1..10]
+evens   = [x for x in 1..20 if x % 2 == 0]
+upper   = [w.upper() for w in ["hello", "world"]]
+
+` Dict comprehension (single var) `
+words   = ["apple", "banana", "cherry"]
+lengths = {w: len(w) for w in words}
+
+` Dict comprehension (key-value — iterates .items()) `
+hashm prices = {apple: 1, banana: 2, cherry: 3}
+doubled  = {k: v * 2 for k, v in prices}
+cheap    = {k: v for k, v in prices if v < 3}
+
+pr "lengths: {lengths}"
+pr "doubled: {doubled}"
+pr "cheap:   {cheap}"</code></pre>
+      </div>
+    </section>
+
+    <!-- ─────────────── SPREAD ─────────────── -->
+    <section class="doc-section" id="spread">
+      <h2>Spread Operator</h2>
+      <div class="code-block">
+        <div class="code-header"><span class="lang-badge">.ry</span></div>
+        <pre><code class="language-rattled">` Merge arrays `
+a = [1, 2, 3]
+b = [4, 5, 6]
+c = [...a, ...b]        ` [1,2,3,4,5,6] `
+
+` Pass array as positional args `
+fn add3(x, y, z) { ret x + y + z }
+nums = [1, 2, 3]
+result = add3(...nums)
+
+` In destructuring `
+[first, ...rest] = [10, 20, 30, 40]
+pr "first={first}  rest={rest}"</code></pre>
+      </div>
+    </section>
+
+    <!-- ─────────────── CLASSES ─────────────── -->
+    <section class="doc-section" id="classes">
+      <h2>Classes</h2>
+      <div class="code-block">
+        <div class="code-header"><span class="lang-badge">.ry</span></div>
+        <pre><code class="language-rattled">Clas Animal {
+    ` Class-level (static) variable `
+    stat kingdom = "Animalia"
+
+    ` Constructor `
+    def(name: str, sound: str) {
+        self.name  = name
+        self.sound = sound
+    }
+
+    ` Instance method `
+    fn speak() {
+        pr "{self.name} says {self.sound}"
+    }
+
+    ` Static method `
+    stat fn classify() {
+        pr "Kingdom: {Animal.kingdom}"
+    }
+}
+
+dog = Animal("Rex", "Woof")
+dog.speak()
+Animal.classify()</code></pre>
+      </div>
+    </section>
+
+    <!-- ─────────────── INHERITANCE ─────────────── -->
+    <section class="doc-section" id="inheritance">
+      <h2>Inheritance</h2>
+      <div class="code-block">
+        <div class="code-header"><span class="lang-badge">.ry</span></div>
+        <pre><code class="language-rattled">Clas Animal {
+    def(name: str) { self.name = name }
+    fn speak() { pr "{self.name} makes a sound" }
+}
+
+` Single inheritance `
+Clas Dog(Animal) {
+    def(name: str) {
+        sup(name)           ` call parent __init__ `
+        self.tricks = []
+    }
+
+    fn speak() {
+        pr "{self.name} barks!"
+    }
+
+    fn learn(trick: str) {
+        self.tricks.push(trick)
+    }
+}
+
+` Multiple inheritance `
+Clas Flyable {
+    fn fly() { pr "{self.name} is flying" }
+}
+
+Clas FlyingDog(Dog, Flyable) {
+    def(name: str) { sup(name) }
+}
+
+fd = FlyingDog("Astro")
+fd.speak()
+fd.fly()</code></pre>
+      </div>
+    </section>
+
+    <!-- ─────────────── ABSTRACT ─────────────── -->
+    <section class="doc-section" id="abstract">
+      <h2>Abstract Classes</h2>
+      <div class="code-block">
+        <div class="code-header"><span class="lang-badge">.ry</span></div>
+        <pre><code class="language-rattled">abst Clas Shape {
+    ` Abstract method — must be implemented by subclasses `
+    abst fn area() { }
+    abst fn perimeter() { }
+
+    ` Concrete method using abstract methods `
+    fn describe() {
+        pr "area={self.area()}  perim={self.perimeter()}"
+    }
+}
+
+Clas Circle(Shape) {
+    def(r: flo) { self.r = r }
+    fn area()      { ret 3.14159 * self.r * self.r }
+    fn perimeter() { ret 2 * 3.14159 * self.r }
+}
+
+c = Circle(5)
+c.describe()</code></pre>
+      </div>
+    </section>
+
+    <!-- ─────────────── PROPERTIES ─────────────── -->
+    <section class="doc-section" id="properties">
+      <h2>Properties (Getters &amp; Setters)</h2>
+      <div class="code-block">
+        <div class="code-header"><span class="lang-badge">.ry</span></div>
+        <pre><code class="language-rattled">Clas Temperature {
+    def(celsius: flo) {
+        self._c = celsius
+    }
+
+    ` Getter — accessed as  obj.fahrenheit `
+    get fn fahrenheit() {
+        ret self._c * 9 / 5 + 32
+    }
+
+    ` Setter — assigned as  obj.celsius = val `
+    get fn celsius() {
+        ret self._c
+    }
+
+    set fn celsius(val) {
+        if val < -273.15 {
+            thr "Below absolute zero!"
+        }
+        self._c = val
+    }
+}
+
+t = Temperature(100)
+pr "Boiling: {t.fahrenheit} F"
+t.celsius = 0
+pr "Freezing: {t.fahrenheit} F"</code></pre>
+      </div>
+    </section>
+
+    <!-- ─────────────── ERROR HANDLING ─────────────── -->
+    <section class="doc-section" id="errors">
+      <h2>Error Handling</h2>
+      <div class="code-block">
+        <div class="code-header"><span class="lang-badge">.ry</span></div>
+        <pre><code class="language-rattled">` Basic try/catch `
+try {
+    result = 10 / 0
+} catch {
+    pr "Something went wrong"
+}
+
+` Typed catch `
+try {
+    n = int("not a number")
+} catch ValueError {
+    pr "Bad number format"
+}
+
+` Multi-type catch `
+try {
+    data = fetchData()
+} catch ValueError, TypeError {
+    pr "Data error"
+} catch Exception {
+    pr "General error"
+} fin {
+    pr "Cleanup — always runs"
+}
+
+` Throw / raise `
+fn divide(a, b) {
+    if b == 0 { thr "Division by zero" }
+    ret a / b
+}
+
+` Null coalescing as safe fallback `
+val = riskyFunc() ?? "default"</code></pre>
+      </div>
+    </section>
+
+    <!-- ─────────────── GENERATORS ─────────────── -->
+    <section class="doc-section" id="generators">
+      <h2>Generators</h2>
+      <p>Use <code>yld</code> to create a generator function:</p>
+      <div class="code-block">
+        <div class="code-header"><span class="lang-badge">.ry</span></div>
+        <pre><code class="language-rattled">fn counter(limit) {
+    i = 0
+    while i < limit {
+        yld i
+        i++
+    }
+}
+
+for n in counter(5) {
+    pr n     ` 0 1 2 3 4 `
+}
+
+fn fibonacci() {
+    a, b = 0, 1
+    while TRUE {
+        yld a
+        a, b = b, a + b
+    }
+}
+
+gen = fibonacci()
+for i in 0..10 {
+    pr next(gen)
+}</code></pre>
+      </div>
+    </section>
+
+    <!-- ─────────────── IMPORTS ─────────────── -->
+    <section class="doc-section" id="imports">
+      <h2>Imports &amp; Modules</h2>
+      <div class="code-block">
+        <div class="code-header"><span class="lang-badge">.ry</span></div>
+        <pre><code class="language-rattled">` Import a Python module `
+imp math
+pr math.sqrt(144)
+
+` Import specific symbol `
+imp sqrt from math
+pr sqrt(25)
+
+` Import with alias `
+imp numpy as np
+
+` Wildcard import `
+imp * from math
+pr pi
+pr floor(3.9)
+
+` Import a .ry module (auto-compiled) `
+imp myUtils
+pr myUtils.factorial(10)</code></pre>
+      </div>
+    </section>
+
+    <!-- ─────────────── .RY MODULES ─────────────── -->
+    <section class="doc-section" id="rymodules">
+      <h2>.ry Module Imports <span class="version-badge">Phase 7</span></h2>
+      <p>You can split your Rattled code across multiple <code>.ry</code> files. When you <code>imp myModule</code> and <code>myModule.ry</code> exists in the same directory, Rattled automatically compiles it and makes it available as a module object.</p>
+      <div class="code-block">
+        <div class="code-header"><span class="lang-badge">.ry</span> mathUtils.ry</div>
+        <pre><code class="language-rattled">fn square(n) { ret n * n }
+fn cube(n)   { ret n * n * n }
+
+fn factorial(n) {
+    if n <= 1 { ret 1 }
+    ret n * factorial(n - 1)
+}</code></pre>
+      </div>
+      <div class="code-block">
+        <div class="code-header"><span class="lang-badge">.ry</span> main.ry</div>
+        <pre><code class="language-rattled">imp mathUtils
+
+pr mathUtils.square(5)        ` 25  `
+pr mathUtils.cube(3)          ` 27  `
+pr mathUtils.factorial(6)     ` 720 `</code></pre>
+      </div>
+      <div class="callout callout-note">
+        <span class="callout-icon">💡</span>
+        <p>The <code>.ry</code> module is compiled at import time and injected into <code>sys.modules</code>, so it behaves exactly like a Python module. Circular imports are detected and skipped.</p>
+      </div>
+    </section>
+
+    <!-- ─────────────── STDLIB ─────────────── -->
+    <section class="doc-section" id="stdlib">
+      <h2>Standard Library</h2>
+
+      <h3>Sorting Algorithms</h3>
+      <p>All sort functions operate <em>in-place</em> on an array:</p>
+      <table>
+        <tr><th>Function</th><th>Algorithm</th><th>Time Complexity</th></tr>
+        <tr><td><code>mergSor(arr)</code></td><td>Merge sort</td><td>O(n log n)</td></tr>
+        <tr><td><code>quikSor(arr)</code></td><td>Quick sort</td><td>O(n log n) avg</td></tr>
+        <tr><td><code>heapSor(arr)</code></td><td>Heap sort</td><td>O(n log n)</td></tr>
+        <tr><td><code>bubSor(arr)</code></td><td>Bubble sort</td><td>O(n²)</td></tr>
+      </table>
+
+      <h3>Search</h3>
+      <table>
+        <tr><th>Function</th><th>Description</th></tr>
+        <tr><td><code>binSer(sorted_arr, target)</code></td><td>Binary search — returns index or <code>-1</code></td></tr>
+      </table>
+
+      <h3>Built-in Functions (from Python)</h3>
+      <table>
+        <tr><th>Function</th><th>Description</th></tr>
+        <tr><td><code>len(x)</code></td><td>Length of array, string, or hashmap</td></tr>
+        <tr><td><code>min(x)</code> / <code>max(x)</code></td><td>Minimum / maximum of an iterable</td></tr>
+        <tr><td><code>range(n)</code> / <code>range(a, b)</code></td><td>Generate integer range</td></tr>
+        <tr><td><code>str(x)</code></td><td>Convert to string</td></tr>
+        <tr><td><code>int(x)</code></td><td>Convert to integer</td></tr>
+        <tr><td><code>flo(x)</code></td><td>Convert to float</td></tr>
+        <tr><td><code>boo(x)</code></td><td>Convert to boolean</td></tr>
+        <tr><td><code>abs(x)</code></td><td>Absolute value</td></tr>
+        <tr><td><code>round(x, n)</code></td><td>Round to n decimal places</td></tr>
+        <tr><td><code>sorted(x)</code></td><td>Return new sorted list</td></tr>
+        <tr><td><code>reversed(x)</code></td><td>Return reversed iterator</td></tr>
+        <tr><td><code>zip(a, b)</code></td><td>Zip two iterables together</td></tr>
+        <tr><td><code>enumerate(x)</code></td><td>Return (index, value) pairs</td></tr>
+        <tr><td><code>next(gen)</code></td><td>Advance a generator</td></tr>
+      </table>
+
+      <h3>I/O</h3>
+      <table>
+        <tr><th>Keyword</th><th>Description</th></tr>
+        <tr><td><code>pr expr</code></td><td>Print expression (auto-casts to string)</td></tr>
+        <tr><td><code>x = inp "prompt: "</code></td><td>Read a line from stdin</td></tr>
+        <tr><td><code>rd "file.txt"</code></td><td>Read file contents as string</td></tr>
+        <tr><td><code>wr "file.txt" content</code></td><td>Write string to file</td></tr>
+        <tr><td><code>fl</code></td><td>Flush stdout</td></tr>
+      </table>
+    </section>
+
+    <!-- ─────────────── KEYWORDS ─────────────── -->
+    <section class="doc-section" id="keywords">
+      <h2>Keyword Reference</h2>
+      <table>
+        <tr><th>Keyword</th><th>Purpose</th></tr>
+        <tr><td><code>fn</code></td><td>Define a function</td></tr>
+        <tr><td><code>ret</code></td><td>Return a value from a function</td></tr>
+        <tr><td><code>Clas</code></td><td>Define a class</td></tr>
+        <tr><td><code>abst Clas</code></td><td>Define an abstract class</td></tr>
+        <tr><td><code>def</code></td><td>Constructor inside a class</td></tr>
+        <tr><td><code>stat fn</code></td><td>Static method</td></tr>
+        <tr><td><code>abst fn</code></td><td>Abstract method</td></tr>
+        <tr><td><code>get fn</code></td><td>Property getter</td></tr>
+        <tr><td><code>set fn</code></td><td>Property setter</td></tr>
+        <tr><td><code>sup()</code></td><td>Call parent constructor</td></tr>
+        <tr><td><code>if / elif / el</code></td><td>Conditional branching</td></tr>
+        <tr><td><code>for / while</code></td><td>Loops</td></tr>
+        <tr><td><code>brk / cont</code></td><td>Break / continue a loop</td></tr>
+        <tr><td><code>sw / cs / def</code></td><td>Switch / case / default</td></tr>
+        <tr><td><code>try / catch / fin</code></td><td>Error handling / finally</td></tr>
+        <tr><td><code>thr</code></td><td>Throw / raise an exception</td></tr>
+        <tr><td><code>yld</code></td><td>Yield from a generator</td></tr>
+        <tr><td><code>lam</code></td><td>Lambda expression</td></tr>
+        <tr><td><code>arr</code></td><td>Declare an array</td></tr>
+        <tr><td><code>hashm</code></td><td>Declare a hashmap</td></tr>
+        <tr><td><code>imp / from / as</code></td><td>Import modules and symbols</td></tr>
+        <tr><td><code>glo</code></td><td>Declare a global variable</td></tr>
+        <tr><td><code>pr</code></td><td>Print</td></tr>
+        <tr><td><code>inp</code></td><td>Read input from stdin</td></tr>
+        <tr><td><code>rd / wr</code></td><td>Read / write files</td></tr>
+        <tr><td><code>fl</code></td><td>Flush stdout</td></tr>
+        <tr><td><code>TRUE / FALSE</code></td><td>Boolean literals</td></tr>
+        <tr><td><code>null</code></td><td>Null literal (<code>None</code>)</td></tr>
+        <tr><td><code>in</code></td><td>Collection membership / for-in</td></tr>
+      </table>
+
+      <h3>Comments</h3>
+      <div class="code-block">
+        <div class="code-header"><span class="lang-badge">.ry</span></div>
+        <pre><code class="language-rattled">` This is a backtick comment (can span multiple lines) `
+
+# This is a line comment
+
+fn foo() {
+    ` inline comment `
+    x = 5  # also inline
+}</code></pre>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/bash.min.js"></script>
+<script>
+  /* ── Rattled language definition for highlight.js ── */
+  hljs.registerLanguage('rattled', (hljs) => ({
+    name: 'Rattled',
+    keywords: {
+      keyword: 'fn Clas def ret if elif el for while sw cs try catch fin thr yld lam imp from as arr hashm glo pr inp rd wr fl brk cont sup abst stat in get set',
+      literal: 'null TRUE FALSE',
+      built_in: 'self str int flo boo len min max range abs round sorted reversed zip enumerate next print input binSer mergSor quikSor heapSor bubSor',
+    },
+    contains: [
+      { className: 'comment', begin: '`', end: '`', relevance: 0 },
+      hljs.COMMENT('#', '$'),
+      { className: 'string', begin: '"""', end: '"""', relevance: 5 },
+      { className: 'string', begin: "'''", end: "'''", relevance: 5 },
+      hljs.QUOTE_STRING_MODE,
+      hljs.NUMBER_MODE,
+      {
+        className: 'operator',
+        begin: /\?\?|->|\.{3}|~~|\+\+|--|[-+*/%]=|==|!=|<=|>=|[&|]{2}|[!?:]/
+      }
+    ]
+  }));
+
+  /* Apply Rattled highlighting */
+  document.querySelectorAll('pre code.language-rattled').forEach(el => {
+    hljs.highlightElement(el);
+  });
+
+  document.querySelectorAll('pre code.language-bash').forEach(el => {
+    hljs.highlightElement(el);
+  });
+
+  /* ── Active sidebar link on scroll ── */
+  const sections = document.querySelectorAll('.doc-section[id]');
+  const links    = document.querySelectorAll('.sidebar-link');
+
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        const id = entry.target.id;
+        links.forEach(l => {
+          l.classList.toggle('active', l.getAttribute('href') === '#' + id);
+        });
+      }
+    });
+  }, { rootMargin: '-56px 0px -60% 0px' });
+
+  sections.forEach(s => observer.observe(s));
+</script>
+</body>
+</html>

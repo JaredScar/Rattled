@@ -63,4 +63,15 @@ python interpreter/main.py examples/fullDemo.ry
 Requires Python 3.6 or newer. No external dependencies.
 
 # Documentation
-See `PLAN.md` for the full language specification and syntax reference.
+A full documentation website lives in the `docs/` folder and is published via **GitHub Pages**.
+
+To enable it:
+1. Push this repository to GitHub.
+2. Go to **Settings → Pages**.
+3. Set **Source** to `Deploy from a branch`, branch `main`, folder `/docs`.
+4. Your docs will be live at `https://your-username.github.io/Rattled/`.
+
+- `docs/index.html` — Landing page with features, install, and code samples
+- `docs/reference.html` — Full language reference (all syntax, OOP, stdlib, CLI)
+
+For the raw language spec see `PLAN.md`.

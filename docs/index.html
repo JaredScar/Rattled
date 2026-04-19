@@ -1,0 +1,774 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Rattled — A fast, expressive language built on Python</title>
+  <meta name="description" content="Rattled is a modern programming language that compiles to Python, giving you clean syntax with Python's full speed and ecosystem." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #0d1117;
+      --bg2:       #161b22;
+      --bg3:       #1f2937;
+      --border:    #30363d;
+      --text:      #c9d1d9;
+      --heading:   #e6edf3;
+      --muted:     #8b949e;
+      --accent:    #ff6b35;
+      --accent2:   #ff8c5a;
+      --blue:      #58a6ff;
+      --green:     #3fb950;
+      --radius:    10px;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+    }
+
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { color: var(--accent2); }
+
+    /* ── NAV ────────────────────────────────────────────────────── */
+    nav {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(13,17,23,.92);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 2rem;
+      height: 60px;
+    }
+
+    .nav-logo {
+      display: flex;
+      align-items: center;
+      gap: .6rem;
+      font-weight: 700;
+      font-size: 1.2rem;
+      color: var(--heading);
+    }
+
+    .nav-logo .snake { font-size: 1.5rem; }
+
+    .nav-links {
+      display: flex;
+      gap: 1.8rem;
+      list-style: none;
+    }
+
+    .nav-links a {
+      color: var(--muted);
+      font-size: .9rem;
+      font-weight: 500;
+      transition: color .2s;
+    }
+
+    .nav-links a:hover { color: var(--heading); }
+
+    .nav-cta {
+      background: var(--accent);
+      color: #fff !important;
+      padding: .4rem 1rem;
+      border-radius: 6px;
+      font-weight: 600 !important;
+      transition: background .2s !important;
+    }
+
+    .nav-cta:hover { background: var(--accent2) !important; color: #fff !important; }
+
+    /* ── HERO ───────────────────────────────────────────────────── */
+    .hero {
+      min-height: calc(100vh - 60px);
+      display: flex;
+      align-items: center;
+      padding: 5rem 2rem;
+      max-width: 1200px;
+      margin: 0 auto;
+      gap: 4rem;
+    }
+
+    .hero-left { flex: 1; }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: .4rem;
+      background: rgba(255,107,53,.12);
+      border: 1px solid rgba(255,107,53,.3);
+      color: var(--accent);
+      padding: .3rem .8rem;
+      border-radius: 100px;
+      font-size: .8rem;
+      font-weight: 600;
+      margin-bottom: 1.5rem;
+    }
+
+    .hero h1 {
+      font-size: clamp(2.5rem, 5vw, 4rem);
+      font-weight: 800;
+      color: var(--heading);
+      line-height: 1.15;
+      margin-bottom: 1.2rem;
+    }
+
+    .hero h1 span { color: var(--accent); }
+
+    .hero p {
+      font-size: 1.15rem;
+      color: var(--muted);
+      max-width: 500px;
+      margin-bottom: 2rem;
+    }
+
+    .hero-actions {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: .5rem;
+      padding: .75rem 1.6rem;
+      border-radius: 8px;
+      font-size: .95rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all .2s;
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      color: #fff;
+    }
+
+    .btn-primary:hover { background: var(--accent2); color: #fff; transform: translateY(-1px); }
+
+    .btn-secondary {
+      background: transparent;
+      color: var(--heading);
+      border: 1px solid var(--border);
+    }
+
+    .btn-secondary:hover { border-color: var(--accent); color: var(--accent); transform: translateY(-1px); }
+
+    .hero-right { flex: 1; max-width: 560px; }
+
+    /* ── CODE WINDOW ────────────────────────────────────────────── */
+    .code-window {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      box-shadow: 0 20px 60px rgba(0,0,0,.5);
+    }
+
+    .code-titlebar {
+      background: var(--bg3);
+      border-bottom: 1px solid var(--border);
+      padding: .6rem 1rem;
+      display: flex;
+      align-items: center;
+      gap: .5rem;
+    }
+
+    .dot { width: 12px; height: 12px; border-radius: 50%; }
+    .dot-red   { background: #ff5f57; }
+    .dot-yellow{ background: #febc2e; }
+    .dot-green { background: #28c840; }
+
+    .code-filename {
+      margin-left: .5rem;
+      font-size: .8rem;
+      color: var(--muted);
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .code-window pre {
+      margin: 0 !important;
+      border-radius: 0 !important;
+      background: var(--bg2) !important;
+      padding: 1.4rem 1.6rem !important;
+      font-size: .85rem !important;
+      line-height: 1.7 !important;
+    }
+
+    .code-window code {
+      font-family: 'JetBrains Mono', monospace !important;
+    }
+
+    /* ── INSTALL STRIP ──────────────────────────────────────────── */
+    .install-strip {
+      background: var(--bg2);
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      padding: 3rem 2rem;
+      text-align: center;
+    }
+
+    .install-strip h2 {
+      font-size: 1.5rem;
+      color: var(--heading);
+      margin-bottom: 1rem;
+    }
+
+    .install-command {
+      display: inline-flex;
+      align-items: center;
+      gap: 1rem;
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: .8rem 1.4rem;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 1rem;
+      color: var(--green);
+    }
+
+    .install-command .prompt { color: var(--muted); }
+
+    /* ── FEATURES ───────────────────────────────────────────────── */
+    .features {
+      max-width: 1200px;
+      margin: 5rem auto;
+      padding: 0 2rem;
+    }
+
+    .section-header {
+      text-align: center;
+      margin-bottom: 3rem;
+    }
+
+    .section-header h2 {
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--heading);
+      margin-bottom: .6rem;
+    }
+
+    .section-header p { color: var(--muted); font-size: 1rem; }
+
+    .feature-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 1.2rem;
+    }
+
+    .feature-card {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.6rem;
+      transition: border-color .2s, transform .2s;
+    }
+
+    .feature-card:hover {
+      border-color: var(--accent);
+      transform: translateY(-2px);
+    }
+
+    .feature-icon {
+      font-size: 1.8rem;
+      margin-bottom: .8rem;
+    }
+
+    .feature-card h3 {
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--heading);
+      margin-bottom: .4rem;
+    }
+
+    .feature-card p {
+      font-size: .88rem;
+      color: var(--muted);
+    }
+
+    /* ── SHOWCASE ───────────────────────────────────────────────── */
+    .showcase {
+      max-width: 1200px;
+      margin: 0 auto 5rem;
+      padding: 0 2rem;
+    }
+
+    .showcase-tabs {
+      display: flex;
+      gap: .5rem;
+      margin-bottom: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .tab-btn {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      color: var(--muted);
+      padding: .4rem .9rem;
+      border-radius: 6px;
+      font-size: .85rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all .2s;
+      font-family: 'Inter', sans-serif;
+    }
+
+    .tab-btn.active,
+    .tab-btn:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+      background: rgba(255,107,53,.08);
+    }
+
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+
+    /* ── COMPARISON ─────────────────────────────────────────────── */
+    .compare {
+      max-width: 1200px;
+      margin: 0 auto 5rem;
+      padding: 0 2rem;
+    }
+
+    .compare-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+    }
+
+    .compare-label {
+      font-size: .8rem;
+      font-weight: 600;
+      padding: .5rem 1rem .3rem;
+      letter-spacing: .05em;
+      text-transform: uppercase;
+    }
+
+    .compare-label.rattled { color: var(--accent); }
+    .compare-label.python  { color: #3c78d8; }
+
+    /* ── FOOTER ─────────────────────────────────────────────────── */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 2rem;
+      text-align: center;
+      color: var(--muted);
+      font-size: .85rem;
+    }
+
+    footer a { color: var(--muted); }
+    footer a:hover { color: var(--accent); }
+
+    /* ── RESPONSIVE ─────────────────────────────────────────────── */
+    @media (max-width: 800px) {
+      .hero { flex-direction: column; padding: 3rem 1.5rem; min-height: auto; }
+      .hero-right { max-width: 100%; width: 100%; }
+      .compare-grid { grid-template-columns: 1fr; }
+      .nav-links { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── NAV ──────────────────────────────────────────────────────── -->
+<nav>
+  <div class="nav-logo">
+    <span class="snake">🐍</span>
+    <span>Rattled</span>
+  </div>
+  <ul class="nav-links">
+    <li><a href="reference.html">Docs</a></li>
+    <li><a href="reference.html#stdlib">Standard Library</a></li>
+    <li><a href="reference.html#cli">CLI</a></li>
+    <li><a href="https://github.com/your-username/Rattled" target="_blank">GitHub</a></li>
+    <li><a href="reference.html" class="nav-cta">Get Started →</a></li>
+  </ul>
+</nav>
+
+<!-- ── HERO ─────────────────────────────────────────────────────── -->
+<section>
+  <div class="hero">
+    <div class="hero-left">
+      <div class="badge">🐍 Transpiles to Python &bull; Phase 7</div>
+      <h1>Code fast.<br/><span>Run Python.</span></h1>
+      <p>
+        Rattled is a modern, expressive programming language that compiles
+        directly to Python — giving you clean, concise syntax with Python's
+        full runtime speed and ecosystem.
+      </p>
+      <div class="hero-actions">
+        <a href="reference.html" class="btn btn-primary">Read the Docs →</a>
+        <a href="reference.html#install" class="btn btn-secondary">⬇ Install</a>
+      </div>
+    </div>
+    <div class="hero-right">
+      <div class="code-window">
+        <div class="code-titlebar">
+          <div class="dot dot-red"></div>
+          <div class="dot dot-yellow"></div>
+          <div class="dot dot-green"></div>
+          <span class="code-filename">hello.ry</span>
+        </div>
+        <pre><code class="language-python">` Fibonacci with Rattled `
+fn fib(n: int) -> int {
+    if n &lt;= 1 { ret n }
+    ret fib(n - 1) + fib(n - 2)
+}
+
+` Pattern matching + type hints `
+fn describe(val) {
+    sw val {
+        cs 0           { pr "zero"          }
+        cs int if val &gt; 0 { pr "positive: {val}" }
+        cs str         { pr "string: {val}" }
+        def            { pr "other: {val}"  }
+    }
+}
+
+` Destructuring + comprehensions `
+[first, ...rest] = [1, 2, 3, 4, 5]
+squares = [x * x for x in rest]
+pr "squares: {squares}"
+
+` Import another .ry file `
+imp myUtils
+pr myUtils.factorial(10)</code></pre>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── INSTALL ───────────────────────────────────────────────────── -->
+<div class="install-strip" id="install">
+  <h2>Get started in seconds</h2>
+  <div class="install-command">
+    <span class="prompt">$</span>
+    <span>pip install rattled</span>
+  </div>
+  <p style="margin-top:1rem;color:var(--muted);font-size:.9rem;">
+    Or clone &amp; run <code style="color:var(--green);font-family:'JetBrains Mono',monospace">python install.py</code>
+    · Requires Python 3.8+
+  </p>
+</div>
+
+<!-- ── FEATURES ─────────────────────────────────────────────────── -->
+<section class="features">
+  <div class="section-header">
+    <h2>Everything you need</h2>
+    <p>Rattled packs a full modern language feature set while staying lightweight.</p>
+  </div>
+  <div class="feature-grid">
+
+    <div class="feature-card">
+      <div class="feature-icon">⚡</div>
+      <h3>Python-speed performance</h3>
+      <p>Rattled transpiles to clean Python 3, running at native Python speed with zero runtime overhead.</p>
+    </div>
+
+    <div class="feature-card">
+      <div class="feature-icon">🎯</div>
+      <h3>Type hints &amp; annotations</h3>
+      <p>Optional type annotations on parameters, return values, and variables emit as real Python type hints.</p>
+    </div>
+
+    <div class="feature-card">
+      <div class="feature-icon">🔀</div>
+      <h3>Destructuring assignment</h3>
+      <p><code style="color:var(--accent);font-family:monospace">[a, ...rest] = arr</code> and <code style="color:var(--accent);font-family:monospace">a, b = fn()</code> tuple unpacking built right in.</p>
+    </div>
+
+    <div class="feature-card">
+      <div class="feature-icon">🧩</div>
+      <h3>Pattern matching</h3>
+      <p>Switch/case with value guards (<code style="color:var(--accent);font-family:monospace">cs x if x &gt; 0</code>) and type checks (<code style="color:var(--accent);font-family:monospace">cs str</code>).</p>
+    </div>
+
+    <div class="feature-card">
+      <div class="feature-icon">📦</div>
+      <h3>Module imports</h3>
+      <p>Import Python packages <em>and</em> other <code style="color:var(--accent);font-family:monospace">.ry</code> files as modules — auto-compiled on the fly.</p>
+    </div>
+
+    <div class="feature-card">
+      <div class="feature-icon">🗃️</div>
+      <h3>Comprehensions</h3>
+      <p>List and dict comprehensions with filters: <code style="color:var(--accent);font-family:monospace">[x*x for x in arr if x&gt;0]</code> and <code style="color:var(--accent);font-family:monospace">{k: v for k,v in map}</code>.</p>
+    </div>
+
+    <div class="feature-card">
+      <div class="feature-icon">🏗️</div>
+      <h3>Full OOP</h3>
+      <p>Classes, inheritance, abstract classes, static methods, property getters/setters, and <code style="color:var(--accent);font-family:monospace">sup()</code>.</p>
+    </div>
+
+    <div class="feature-card">
+      <div class="feature-icon">🛠️</div>
+      <h3>VS Code extension</h3>
+      <p>Syntax highlighting for <code style="color:var(--accent);font-family:monospace">.ry</code> files out of the box with the included VS Code extension.</p>
+    </div>
+
+    <div class="feature-card">
+      <div class="feature-icon">🐛</div>
+      <h3>Source-mapped errors</h3>
+      <p>Runtime errors report the original <code style="color:var(--accent);font-family:monospace">.ry</code> line number, not the generated Python line.</p>
+    </div>
+
+  </div>
+</section>
+
+<!-- ── CODE SHOWCASE ─────────────────────────────────────────────── -->
+<section class="showcase">
+  <div class="section-header">
+    <h2>See the syntax</h2>
+    <p>Explore Rattled's concise, expressive language features.</p>
+  </div>
+
+  <div class="showcase-tabs">
+    <button class="tab-btn active" onclick="showTab('tab-oop')">Classes &amp; OOP</button>
+    <button class="tab-btn" onclick="showTab('tab-collections')">Collections</button>
+    <button class="tab-btn" onclick="showTab('tab-errors')">Error Handling</button>
+    <button class="tab-btn" onclick="showTab('tab-closures')">Lambdas &amp; Closures</button>
+  </div>
+
+  <div id="tab-oop" class="tab-panel active">
+    <div class="code-window">
+      <div class="code-titlebar">
+        <div class="dot dot-red"></div><div class="dot dot-yellow"></div><div class="dot dot-green"></div>
+        <span class="code-filename">shapes.ry</span>
+      </div>
+      <pre><code class="language-python">abst Clas Shape {
+    abst fn area() { }
+
+    get fn label() {
+        ret "Shape(area={self.area()})"
+    }
+}
+
+Clas Circle(Shape) {
+    def(radius: flo) {
+        self.radius = radius
+    }
+
+    fn area() -> flo {
+        ret 3.14159 * self.radius * self.radius
+    }
+}
+
+Clas Rectangle(Shape) {
+    def(w: flo, h: flo) {
+        self.w = w
+        self.h = h
+    }
+
+    fn area() -> flo { ret self.w * self.h }
+}
+
+shapes = [Circle(5), Rectangle(4, 6)]
+for shape in shapes {
+    pr shape.label
+}</code></pre>
+    </div>
+  </div>
+
+  <div id="tab-collections" class="tab-panel">
+    <div class="code-window">
+      <div class="code-titlebar">
+        <div class="dot dot-red"></div><div class="dot dot-yellow"></div><div class="dot dot-green"></div>
+        <span class="code-filename">collections.ry</span>
+      </div>
+      <pre><code class="language-python">` Array destructuring + spread `
+[first, second, ...rest] = [1, 2, 3, 4, 5]
+pr "rest = {rest}"
+
+` Tuple-style return and unpacking `
+fn bounds(nums) { ret min(nums), max(nums) }
+lo, hi = bounds([3, 1, 7, 2, 9])
+
+` List comprehensions `
+evens  = [x for x in 1..20 if x % 2 == 0]
+squares = [x * x for x in evens]
+
+` Dict comprehensions `
+hashm scores = {alice: 95, bob: 82, carol: 91}
+passing = {name: score for name, score in scores if score >= 90}
+pr "top scorers: {passing}"
+
+` Spread / merge arrays `
+a = [1, 2, 3]
+b = [4, 5, 6]
+merged = [...a, ...b]
+pr "merged: {merged}"</code></pre>
+    </div>
+  </div>
+
+  <div id="tab-errors" class="tab-panel">
+    <div class="code-window">
+      <div class="code-titlebar">
+        <div class="dot dot-red"></div><div class="dot dot-yellow"></div><div class="dot dot-green"></div>
+        <span class="code-filename">errors.ry</span>
+      </div>
+      <pre><code class="language-python">fn safeDivide(a: flo, b: flo) -> flo {
+    if b == 0 {
+        thr "Division by zero!"
+    }
+    ret a / b
+}
+
+` Multi-type catch + finally `
+try {
+    result = safeDivide(10, 0)
+    pr result
+} catch ValueError, RuntimeError {
+    pr "Caught a value or runtime error"
+} catch Exception {
+    pr "Caught general exception"
+} fin {
+    pr "Always runs"
+}
+
+` Null coalescing `
+config = null
+timeout = config ?? 30
+pr "timeout = {timeout}"</code></pre>
+    </div>
+  </div>
+
+  <div id="tab-closures" class="tab-panel">
+    <div class="code-window">
+      <div class="code-titlebar">
+        <div class="dot dot-red"></div><div class="dot dot-yellow"></div><div class="dot dot-green"></div>
+        <span class="code-filename">closures.ry</span>
+      </div>
+      <pre><code class="language-python">` Lambda expression `
+double = lam x -> x * 2
+triple = lam x -> x * 3
+
+` Anonymous function (multi-line) `
+add = fn(a, b) { ret a + b }
+
+` Higher-order functions `
+fn apply(fn_arg, ...vals) {
+    ret [fn_arg(v) for v in vals]
+}
+
+pr apply(double, 1, 2, 3, 4)   ` [2, 4, 6, 8] `
+pr apply(triple, 1, 2, 3)       ` [3, 6, 9]   `
+
+` Sort with lambda key `
+words = ["banana", "apple", "cherry"]
+words.sort(key = lam w -> len(w))
+pr words</code></pre>
+    </div>
+  </div>
+</section>
+
+<!-- ── COMPARE ────────────────────────────────────────────────────── -->
+<section class="compare">
+  <div class="section-header">
+    <h2>Rattled vs Python</h2>
+    <p>Same runtime. Cleaner syntax.</p>
+  </div>
+  <div class="compare-grid">
+    <div>
+      <div class="compare-label rattled">🐍 Rattled</div>
+      <div class="code-window">
+        <pre><code class="language-python">Clas Counter {
+    def(start: int = 0) {
+        self.value = start
+    }
+
+    fn increment(by: int = 1) {
+        self.value += by
+    }
+
+    get fn count() {
+        ret self.value
+    }
+}
+
+c = Counter(10)
+c.increment(5)
+pr "count = {c.count}"</code></pre>
+      </div>
+    </div>
+    <div>
+      <div class="compare-label python">🐍 Python (equivalent)</div>
+      <div class="code-window">
+        <pre><code class="language-python">class Counter:
+    def __init__(self, start: int = 0):
+        self.value = start
+
+    def increment(self, by: int = 1):
+        self.value += by
+
+    @property
+    def count(self):
+        return self.value
+
+c = Counter(10)
+c.increment(5)
+print(f"count = {c.count}")</code></pre>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── FOOTER ─────────────────────────────────────────────────────── -->
+<footer>
+  <p>
+    Rattled — Built with Python &bull;
+    <a href="reference.html">Documentation</a> &bull;
+    <a href="https://github.com/your-username/Rattled" target="_blank">GitHub</a>
+  </p>
+</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script>
+  /* Register a minimal Rattled grammar on top of hljs */
+  hljs.registerLanguage('rattled', (hljs) => ({
+    name: 'Rattled',
+    keywords: {
+      keyword: 'fn Clas def ret if elif el for while sw cs try catch fin thr yld lam imp from as arr hashm glo pr inp rd wr fl brk cont sup abst stat in get set',
+      literal: 'null TRUE FALSE',
+      built_in: 'str int flo boo len min max range print input self binSer mergSor quikSor heapSor bubSor'
+    },
+    contains: [
+      { className: 'comment', begin: '`', end: '`', relevance: 0 },
+      hljs.COMMENT('#', '$'),
+      { className: 'string', begin: '"""', end: '"""' },
+      { className: 'string', begin: "'''", end: "'''" },
+      hljs.QUOTE_STRING_MODE,
+      hljs.NUMBER_MODE,
+    ]
+  }));
+
+  /* Apply Rattled highlighting to all code blocks */
+  document.querySelectorAll('pre code').forEach(el => {
+    el.classList.remove('language-python');
+    el.classList.add('language-rattled');
+    hljs.highlightElement(el);
+  });
+
+  /* Tab switching */
+  function showTab(id) {
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    event.target.classList.add('active');
+  }
+</script>
+</body>
+</html>

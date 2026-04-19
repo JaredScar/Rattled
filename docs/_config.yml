@@ -1,0 +1,6 @@
+title: Rattled Programming Language
+description: A fast, expressive language that compiles to Python
+url: ""
+baseurl: ""
+# Disable Jekyll processing of our custom HTML/CSS site
+# (GitHub Pages will serve the HTML files directly)
