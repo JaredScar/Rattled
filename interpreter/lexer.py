@@ -11,15 +11,24 @@
 #
 import sys
 import os
-sys.path.insert(0, os.path.dirname(__file__))
 
-from constants import (
-    TT_KEYWORD, TT_IDENT, TT_STRING, TT_INT, TT_FLOAT, TT_OP,
-    TT_LPAREN, TT_RPAREN, TT_LBRACE, TT_RBRACE,
-    TT_LBRACKET, TT_RBRACKET, TT_COMMA, TT_DOT, TT_COLON, TT_RANGE, TT_EOF,
-    KEYWORDS,
-)
-from tok import Token
+try:
+    from .constants import (
+        TT_KEYWORD, TT_IDENT, TT_STRING, TT_INT, TT_FLOAT, TT_OP,
+        TT_LPAREN, TT_RPAREN, TT_LBRACE, TT_RBRACE,
+        TT_LBRACKET, TT_RBRACKET, TT_COMMA, TT_DOT, TT_COLON, TT_RANGE, TT_EOF,
+        KEYWORDS,
+    )
+    from .tok import Token
+except ImportError:
+    sys.path.insert(0, os.path.dirname(__file__))
+    from constants import (
+        TT_KEYWORD, TT_IDENT, TT_STRING, TT_INT, TT_FLOAT, TT_OP,
+        TT_LPAREN, TT_RPAREN, TT_LBRACE, TT_RBRACE,
+        TT_LBRACKET, TT_RBRACKET, TT_COMMA, TT_DOT, TT_COLON, TT_RANGE, TT_EOF,
+        KEYWORDS,
+    )
+    from tok import Token
 
 
 class LexError(Exception):

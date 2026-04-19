@@ -10,12 +10,15 @@
 import sys
 import os
 
-# Ensure the interpreter directory is on the path so all modules resolve.
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-
-from lexer       import Lexer,       LexError
-from rParser     import Parser,      ParseError
-from transpiler  import Transpiler,  TranspileError
+try:
+    from .lexer      import Lexer,      LexError
+    from .rParser    import Parser,     ParseError
+    from .transpiler import Transpiler, TranspileError
+except ImportError:
+    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+    from lexer       import Lexer,       LexError
+    from rParser     import Parser,      ParseError
+    from transpiler  import Transpiler,  TranspileError
 
 
 # ═══════════════════════════════════════════════════════════════════

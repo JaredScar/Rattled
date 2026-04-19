@@ -1,0 +1,169 @@
+{
+  "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+  "name": "Rattled",
+  "scopeName": "source.rattled",
+  "patterns": [
+    { "include": "#comments" },
+    { "include": "#strings" },
+    { "include": "#keywords-control" },
+    { "include": "#keywords-definition" },
+    { "include": "#keywords-io" },
+    { "include": "#keywords-literal" },
+    { "include": "#keywords-algorithm" },
+    { "include": "#casts" },
+    { "include": "#class-name" },
+    { "include": "#function-call" },
+    { "include": "#numbers" },
+    { "include": "#operators" },
+    { "include": "#identifiers" }
+  ],
+  "repository": {
+    "comments": {
+      "patterns": [
+        {
+          "name": "comment.line.number-sign.rattled",
+          "match": "#.*$"
+        },
+        {
+          "name": "comment.block.rattled",
+          "begin": "`",
+          "end": "`",
+          "beginCaptures": { "0": { "name": "punctuation.definition.comment.rattled" } },
+          "endCaptures":   { "0": { "name": "punctuation.definition.comment.rattled" } }
+        }
+      ]
+    },
+
+    "strings": {
+      "patterns": [
+        {
+          "name": "string.quoted.double.rattled",
+          "begin": "\"",
+          "end": "\"",
+          "beginCaptures": { "0": { "name": "punctuation.definition.string.begin.rattled" } },
+          "endCaptures":   { "0": { "name": "punctuation.definition.string.end.rattled" } },
+          "patterns": [
+            {
+              "name": "constant.character.escape.rattled",
+              "match": "\\\\."
+            },
+            {
+              "name": "variable.other.interpolated.rattled",
+              "match": "\\{\\w[\\w.]*\\}"
+            }
+          ]
+        },
+        {
+          "name": "string.quoted.single.rattled",
+          "begin": "'",
+          "end": "'",
+          "beginCaptures": { "0": { "name": "punctuation.definition.string.begin.rattled" } },
+          "endCaptures":   { "0": { "name": "punctuation.definition.string.end.rattled" } },
+          "patterns": [
+            {
+              "name": "constant.character.escape.rattled",
+              "match": "\\\\."
+            }
+          ]
+        }
+      ]
+    },
+
+    "keywords-control": {
+      "name": "keyword.control.rattled",
+      "match": "\\b(if|elif|el|for|while|sw|cs|try|catch|brk|cont|in|ret)\\b"
+    },
+
+    "keywords-definition": {
+      "name": "keyword.other.definition.rattled",
+      "match": "\\b(fn|Clas|def|sup|glo|stat|imp|from|arr|hashm)\\b"
+    },
+
+    "keywords-io": {
+      "name": "support.function.rattled",
+      "match": "\\b(pr|inp|rd|wr|fl)\\b"
+    },
+
+    "keywords-literal": {
+      "name": "constant.language.rattled",
+      "match": "\\b(TRUE|FALSE|null)\\b"
+    },
+
+    "keywords-algorithm": {
+      "name": "support.function.builtin.rattled",
+      "match": "\\b(binSer|mergSor|quikSor|heapSor|bubSor)\\b"
+    },
+
+    "casts": {
+      "name": "support.type.rattled",
+      "match": "\\b(int|flo|boo|str)\\b(?=\\()"
+    },
+
+    "class-name": {
+      "patterns": [
+        {
+          "comment": "class definition name",
+          "name": "entity.name.type.class.rattled",
+          "match": "(?<=\\bClas\\s)([A-Z][\\w]*)"
+        },
+        {
+          "comment": "class instantiation / constructor call",
+          "name": "entity.name.type.rattled",
+          "match": "\\b([A-Z][\\w]*)(?=\\()"
+        }
+      ]
+    },
+
+    "function-call": {
+      "name": "entity.name.function.rattled",
+      "match": "\\b([a-z_][\\w]*)(?=\\()"
+    },
+
+    "numbers": {
+      "patterns": [
+        {
+          "name": "constant.numeric.float.rattled",
+          "match": "\\b[0-9]+\\.[0-9]+\\b"
+        },
+        {
+          "name": "constant.numeric.integer.rattled",
+          "match": "\\b[0-9]+\\b"
+        }
+      ]
+    },
+
+    "operators": {
+      "patterns": [
+        {
+          "name": "keyword.operator.logical.rattled",
+          "match": "(&&|\\|\\||!(?!=))"
+        },
+        {
+          "name": "keyword.operator.comparison.rattled",
+          "match": "(==|!=|<=|>=|<|>)"
+        },
+        {
+          "name": "keyword.operator.assignment.rattled",
+          "match": "(\\+=|-=|\\*=|/=|=)"
+        },
+        {
+          "name": "keyword.operator.increment.rattled",
+          "match": "(\\+\\+|--)"
+        },
+        {
+          "name": "keyword.operator.range.rattled",
+          "match": "\\.\\."
+        },
+        {
+          "name": "keyword.operator.arithmetic.rattled",
+          "match": "(\\*\\*|\\+|-|\\*|/|%)"
+        }
+      ]
+    },
+
+    "identifiers": {
+      "name": "variable.other.rattled",
+      "match": "\\b[a-zA-Z_][\\w]*\\b"
+    }
+  }
+}

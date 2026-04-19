@@ -1,7 +1,10 @@
 #
 # Rattled Programming Language — Token
 #
-from constants import TT_KEYWORD, TT_OP
+try:
+    from .constants import TT_KEYWORD, TT_OP
+except ImportError:
+    from constants import TT_KEYWORD, TT_OP
 
 
 class Token:

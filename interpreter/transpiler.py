@@ -15,11 +15,16 @@
 import re
 import sys
 import os
-sys.path.insert(0, os.path.dirname(__file__))
 
-from ast_nodes import *
-from constants import CAST_MAP, METHOD_ALIAS, LEN_METHOD, LOGICAL_OP, STD_FUNCS
-from rattled_std import RATTLED_STD
+try:
+    from .ast_nodes import *
+    from .constants import CAST_MAP, METHOD_ALIAS, LEN_METHOD, LOGICAL_OP, STD_FUNCS
+    from .rattled_std import RATTLED_STD
+except ImportError:
+    sys.path.insert(0, os.path.dirname(__file__))
+    from ast_nodes import *
+    from constants import CAST_MAP, METHOD_ALIAS, LEN_METHOD, LOGICAL_OP, STD_FUNCS
+    from rattled_std import RATTLED_STD
 
 # Matches {identifier} or {identifier.attr} inside strings — triggers f-string
 _INTERP_RE = re.compile(r'\{(\w[\w.]*)\}')

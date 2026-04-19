@@ -536,48 +536,57 @@ Maps to Python's `try / except`.
 
 ## 8. Implementation Roadmap
 
-### Phase 1 — Lexer (Foundation)
-- [ ] Tokenize all keywords, identifiers, operators, literals, and delimiters
-- [ ] Handle single-quoted and double-quoted strings
-- [ ] Handle backtick comments
-- [ ] Handle `#` line comments (legacy support)
-- [ ] Track line numbers for error reporting
-- [ ] Ignore optional semicolons
-- [ ] Support multi-line expressions in parentheses
+### Phase 1 — Lexer (Foundation) ✅ Complete
+- [x] Tokenize all keywords, identifiers, operators, literals, and delimiters
+- [x] Handle single-quoted and double-quoted strings
+- [x] Handle backtick comments
+- [x] Handle `#` line comments (legacy support)
+- [x] Track line numbers for error reporting
+- [x] Ignore optional semicolons
+- [x] Support multi-line expressions in parentheses
 
-### Phase 2 — Parser (AST)
-- [ ] Define AST node types (AssignNode, PrintNode, IfNode, ForNode, WhileNode, FnNode, ClassNode, …)
-- [ ] Parse variable assignment
-- [ ] Parse `pr` / `inp` statements
-- [ ] Parse `if` / `elif` / `el` blocks
-- [ ] Parse `for` and `while` loops
-- [ ] Parse `fn` function definitions and calls
-- [ ] Parse `Clas` class definitions
-- [ ] Parse `arr` and `hashm` literals
-- [ ] Parse `sw` / `cs` switch blocks
-- [ ] Parse `imp` imports
-- [ ] Parse expressions (arithmetic, comparison, logical, casting)
+### Phase 2 — Parser (AST) ✅ Complete
+- [x] Define AST node types (AssignNode, PrintNode, IfNode, ForNode, WhileNode, FnNode, ClassNode, …)
+- [x] Parse variable assignment
+- [x] Parse `pr` / `inp` statements
+- [x] Parse `if` / `elif` / `el` blocks
+- [x] Parse `for` (condition form + range form `for i in 0..n`) and `while` loops
+- [x] Parse `fn` function definitions and calls
+- [x] Parse `Clas` class definitions (constructor `def`, instance `fn`, static `stat fn`)
+- [x] Parse `arr` and `hashm` literals
+- [x] Parse `sw` / `cs` switch blocks
+- [x] Parse `imp` imports (`imp mod` and `imp name from mod`)
+- [x] Parse expressions (arithmetic, comparison, logical, casting, `++`/`--`, `&&`/`||`/`!`)
+- [x] Parse `try` / `catch` (bare and typed: `catch ValueError`)
+- [x] Parse `brk` (break) and `cont` (continue)
 
-### Phase 3 — Transpiler
-- [ ] Walk AST and emit Python source
-- [ ] Handle auto-init and auto-increment of `for` loop variables
-- [ ] Map all keywords to their Python equivalents
-- [ ] Emit `__init__` for `def` inside `Clas`
-- [ ] Prepend standard library stubs when built-in algorithms are used
-- [ ] Line-number comment annotations in generated Python for debugging
+### Phase 3 — Transpiler ✅ Complete
+- [x] Walk AST and emit Python source
+- [x] Handle auto-init and auto-increment of `for` loop variables
+- [x] Map all keywords to their Python equivalents
+- [x] Emit `__init__` for `def` inside `Clas`
+- [x] Prepend standard library stubs when built-in algorithms are used
+- [x] Line-number comment annotations (`# ry:N`) in generated Python for debugging
+- [x] `pr` auto-cast: non-strings in `+` chains are wrapped in `str()` automatically
+- [x] String interpolation: `"Hello {name}"` emits Python f-strings
+- [x] Static methods: `stat fn` emits `@staticmethod`
+- [x] Typed catch: `catch ValueError` emits `except ValueError:`
 
-### Phase 4 — Runner
-- [ ] Accept a `.ry` file path as a CLI argument
-- [ ] Lex → Parse → Transpile pipeline
-- [ ] Execute generated Python via `exec()` or write to a temp `.py` file and run it
-- [ ] `--emit-python` flag to dump the generated Python source
+### Phase 4 — Runner ✅ Complete
+- [x] Accept a `.ry` file path as a CLI argument (`python rattled.py file.ry`)
+- [x] Lex → Parse → Transpile pipeline
+- [x] Execute generated Python via `exec()`
+- [x] `--emit-python` flag to dump the generated Python source
+- [x] `--check` flag for lint-only mode (no execution)
+- [x] Interactive REPL (`python rattled.py` with no arguments)
+- [x] Root-level launcher `rattled.py` (no need to `cd` into `interpreter/`)
 
-### Phase 5 — Polish
-- [ ] Friendly error messages with `.ry` line numbers
-- [ ] `--check` flag (lint only, no execution)
-- [ ] REPL mode (`rattled` with no arguments)
-- [ ] VS Code / syntax-highlighting extension (TextMate grammar for `.ry`)
-- [ ] Package on PyPI as `rattled` CLI tool
+### Phase 5 — Polish 🔲 Remaining
+- [x] Friendly error messages with `.ry` line numbers
+- [x] `--check` flag (lint only, no execution)
+- [x] REPL mode (`python rattled.py` with no arguments)
+- [x] **VS Code syntax-highlighting extension** — TextMate grammar for `.ry` files (`vscode-rattled/`)
+- [x] **PyPI packaging** — `pyproject.toml` so `pip install rattled` and `rattled file.ry` work
 
 ---
 
