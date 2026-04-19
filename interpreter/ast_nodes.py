@@ -97,6 +97,18 @@ class ForNode:
         self.body = body
 
 
+class ForRangeNode:
+    """
+    for var in start..end { body }
+    Maps to Python: for var in range(start, end):
+    """
+    def __init__(self, var, start, end, body):
+        self.var   = var    # str
+        self.start = start
+        self.end   = end
+        self.body  = body
+
+
 class WhileNode:
     """while cond { body }  (no auto-management of loop variable)"""
     def __init__(self, cond, body):
@@ -120,11 +132,14 @@ class ConstructorNode:
 
 
 class MethodNode:
-    """fn name(params) { body }  inside a Clas block  →  def name(self, params):"""
-    def __init__(self, name, params, body):
-        self.name   = name
-        self.params = params
-        self.body   = body
+    """fn name(params) { body }  inside a Clas block  →  def name(self, params):
+       stat fn name(params) { body }                  →  @staticmethod / def name(params):
+    """
+    def __init__(self, name, params, body, is_static=False):
+        self.name      = name
+        self.params    = params
+        self.body      = body
+        self.is_static = is_static
 
 
 class ClassNode:
@@ -145,10 +160,24 @@ class SwitchNode:
 
 
 class TryCatchNode:
-    """try { body } catch { body }  →  try: ... except Exception: ..."""
-    def __init__(self, try_body, catch_body):
+    """
+    try { body } catch { body }          →  try: ... except Exception: ...
+    try { body } catch SomeError { body }  →  try: ... except SomeError: ...
+    """
+    def __init__(self, try_body, catch_body, exc_type=None):
         self.try_body   = try_body
         self.catch_body = catch_body
+        self.exc_type   = exc_type   # str or None
+
+
+class BreakNode:
+    """brk  →  break"""
+    pass
+
+
+class ContinueNode:
+    """cont  →  continue"""
+    pass
 
 
 class ExprStmtNode:

@@ -18,6 +18,7 @@ TT_RBRACKET  = 'RBRACKET'  # ]
 TT_COMMA     = 'COMMA'
 TT_DOT       = 'DOT'
 TT_COLON     = 'COLON'
+TT_RANGE     = 'RANGE'    # ..
 TT_EOF       = 'EOF'
 
 # ─── Reserved Keywords ───────────────────────────────────────────────────────
@@ -39,6 +40,12 @@ KEYWORDS = frozenset({
     'TRUE', 'FALSE', 'null',
     # built-in algorithms
     'binSer', 'mergSor', 'quikSor', 'heapSor', 'bubSor',
+    # range-for
+    'in',
+    # loop control
+    'brk', 'cont',
+    # static methods
+    'stat',
 })
 
 # ─── Cast-function identifier → Python builtin ──────────────────────────────

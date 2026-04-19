@@ -17,7 +17,7 @@ sys.path.insert(0, os.path.dirname(__file__))
 from constants import (
     TT_KEYWORD, TT_IDENT, TT_STRING, TT_INT, TT_FLOAT, TT_OP,
     TT_LPAREN, TT_RPAREN, TT_LBRACE, TT_RBRACE,
-    TT_LBRACKET, TT_RBRACKET, TT_COMMA, TT_DOT, TT_COLON, TT_EOF,
+    TT_LBRACKET, TT_RBRACKET, TT_COMMA, TT_DOT, TT_COLON, TT_RANGE, TT_EOF,
     OP_PREC, STD_FUNCS,
 )
 from ast_nodes import *
@@ -42,6 +42,10 @@ class Parser:
 
     def _cur(self):
         return self.tokens[self.pos]
+
+    def _peek(self, offset=1):
+        p = self.pos + offset
+        return self.tokens[p] if p < len(self.tokens) else self.tokens[-1]
 
     def _eat(self):
         tok = self.tokens[self.pos]
@@ -77,6 +81,13 @@ class Parser:
     # ─── statement dispatch ───────────────────────────────────────────────────
 
     def _parse_stmt(self):
+        # Record line number for annotation; attach to the returned node.
+        line = self._cur().line
+        node = self._dispatch_stmt()
+        node.line = line
+        return node
+
+    def _dispatch_stmt(self):
         tok = self._cur()
 
         if tok.is_kw('pr'):    return self._parse_print()
@@ -94,6 +105,12 @@ class Parser:
         if tok.is_kw('try'):   return self._parse_try()
         if tok.is_kw('rd'):    return self._parse_read_file()
         if tok.is_kw('wr'):    return self._parse_write_file()
+        if tok.is_kw('brk'):
+            self._eat()
+            return BreakNode()
+        if tok.is_kw('cont'):
+            self._eat()
+            return ContinueNode()
         if tok.is_kw('fl'):
             self._eat()
             return FlushNode()
@@ -127,6 +144,16 @@ class Parser:
 
     def _parse_for(self):
         self._eat()  # for
+        # Range form:  for i in start..end { }
+        if self._cur().type == TT_IDENT and self._peek().is_kw('in'):
+            var   = self._eat().value           # variable name
+            self._eat()                         # in
+            start = self._parse_expr()
+            self._expect(TT_RANGE)              # ..
+            end   = self._parse_expr()
+            body  = self._parse_block()
+            return ForRangeNode(var, start, end, body)
+        # Condition form:  for cond { }
         cond = self._parse_expr()
         body = self._parse_block()
         return ForNode(cond, body)
@@ -169,7 +196,15 @@ class Parser:
                 body   = self._parse_block()
                 constructor = ConstructorNode(params, body)
 
-            elif self._cur().is_kw('fn'):       # method
+            elif self._cur().is_kw('stat'):     # static method
+                self._eat()                     # stat
+                self._expect_kw('fn')
+                mname  = self._expect(TT_IDENT).value
+                params = self._parse_params()
+                body   = self._parse_block()
+                methods.append(MethodNode(mname, params, body, is_static=True))
+
+            elif self._cur().is_kw('fn'):       # instance method
                 self._eat()
                 mname  = self._expect(TT_IDENT).value
                 params = self._parse_params()
@@ -177,7 +212,7 @@ class Parser:
                 methods.append(MethodNode(mname, params, body))
 
             else:
-                self._err('Expected def or fn in class body, got {!r}'.format(
+                self._err('Expected def, fn, or stat fn in class body, got {!r}'.format(
                     self._cur().value))
 
         self._expect(TT_RBRACE)
@@ -256,10 +291,14 @@ class Parser:
 
     def _parse_try(self):
         self._eat()  # try
-        try_body   = self._parse_block()
+        try_body = self._parse_block()
         self._expect_kw('catch')
+        # Optional exception type:  catch ValueError { }
+        exc_type = None
+        if self._cur().type == TT_IDENT:
+            exc_type = self._eat().value
         catch_body = self._parse_block()
-        return TryCatchNode(try_body, catch_body)
+        return TryCatchNode(try_body, catch_body, exc_type)
 
     def _parse_read_file(self):
         self._eat()  # rd

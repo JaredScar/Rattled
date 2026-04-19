@@ -16,7 +16,7 @@ sys.path.insert(0, os.path.dirname(__file__))
 from constants import (
     TT_KEYWORD, TT_IDENT, TT_STRING, TT_INT, TT_FLOAT, TT_OP,
     TT_LPAREN, TT_RPAREN, TT_LBRACE, TT_RBRACE,
-    TT_LBRACKET, TT_RBRACKET, TT_COMMA, TT_DOT, TT_COLON, TT_EOF,
+    TT_LBRACKET, TT_RBRACKET, TT_COMMA, TT_DOT, TT_COLON, TT_RANGE, TT_EOF,
     KEYWORDS,
 )
 from tok import Token
@@ -105,12 +105,23 @@ class Lexer:
                 tokens.append(self._read_op())
                 continue
 
-            # ── single-character punctuation ─────────────────────────────────
+            # ── single-character punctuation (and .. range) ───────────────────
+            if c == '.':
+                # Check for range operator ..
+                if self._ch(1) == '.':
+                    tokens.append(Token(TT_RANGE, '..', self.line))
+                    self._eat()   # first dot
+                    self._eat()   # second dot
+                else:
+                    tokens.append(Token(TT_DOT, '.', self.line))
+                    self._eat()
+                continue
+
             punct = {
                 '{': TT_LBRACE, '}': TT_RBRACE,
                 '(': TT_LPAREN, ')': TT_RPAREN,
                 '[': TT_LBRACKET, ']': TT_RBRACKET,
-                ',': TT_COMMA, '.': TT_DOT, ':': TT_COLON,
+                ',': TT_COMMA, ':': TT_COLON,
             }
             if c in punct:
                 tokens.append(Token(punct[c], c, self.line))

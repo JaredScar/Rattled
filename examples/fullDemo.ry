@@ -1,7 +1,8 @@
 `==========================================================
   fullDemo.ry -- Rattled language feature showcase
-  Run with:  python interpreter/main.py examples/fullDemo.ry
-  Inspect:   python interpreter/main.py examples/fullDemo.ry --emit-python
+  Run:     python rattled.py examples/fullDemo.ry
+  Check:   python rattled.py examples/fullDemo.ry --check
+  Inspect: python rattled.py examples/fullDemo.ry --emit-python
 ==========================================================`
 
 pr "--- 1. Variables & types ---"
@@ -13,39 +14,57 @@ isAwesome = TRUE
 nothing   = null
 
 pr "name      = " + name
-pr "version   = " + str(version)
-pr "pi        = " + str(pi)
-pr "isAwesome = " + str(isAwesome)
-pr "nothing   = " + str(nothing)
+pr "version   = " + version
+pr "pi        = " + pi
+pr "isAwesome = " + isAwesome
+pr "nothing   = " + nothing
 
 
-pr "--- 2. Casting ---"
+pr "--- 2. String interpolation ---"
+
+lang  = "Rattled"
+year  = 2025
+pr "Welcome to {lang} (version {year})!"
+
+user  = "Jared"
+score = 98
+pr "Hello {user}, your score is {score}."
+
+
+pr "--- 3. Casting ---"
 
 numStr = str(42)
 floatV = flo("3.99")
 intV   = int(floatV)
 boolV  = boo(1)
 
-pr "str(42)       = " + numStr
-pr "flo('3.99')   = " + str(floatV)
-pr "int(flo)      = " + str(intV)
-pr "boo(1)        = " + str(boolV)
+pr "str(42)     = " + numStr
+pr "flo('3.99') = " + floatV
+pr "int(flo)    = " + intV
+pr "boo(1)      = " + boolV
 
 
-pr "--- 3. Arithmetic ---"
+pr "--- 4. Arithmetic ---"
 
 a = 10
 b = 3
 
-pr "a + b  = " + str(a + b)
-pr "a - b  = " + str(a - b)
-pr "a * b  = " + str(a * b)
-pr "a / b  = " + str(a / b)
-pr "a % b  = " + str(a % b)
-pr "a ** b = " + str(a ** b)
+sum_ab  = a + b
+diff_ab = a - b
+prod_ab = a * b
+div_ab  = a / b
+mod_ab  = a % b
+pow_ab  = a ** b
+
+pr "a + b  = " + sum_ab
+pr "a - b  = " + diff_ab
+pr "a * b  = " + prod_ab
+pr "a / b  = " + div_ab
+pr "a % b  = " + mod_ab
+pr "a ** b = " + pow_ab
 
 
-pr "--- 4. if / elif / el ---"
+pr "--- 5. if / elif / el ---"
 
 temp = 22
 if temp >= 30 {
@@ -59,94 +78,121 @@ if temp >= 30 {
 }
 
 
-pr "--- 5. for loop (auto-init and auto-increment) ---"
+pr "--- 6. for (condition form, auto-init & auto-increment) ---"
 
 for i < 4 {
-    pr "for i=" + str(i)
+    pr "for i=" + i
 }
 
 
-pr "--- 6. while loop ---"
+pr "--- 7. for (range form: for var in start..end) ---"
+
+for n in 0..5 {
+    pr "range n=" + n
+}
+
+for n in 10..15 {
+    pr "range n=" + n
+}
+
+
+pr "--- 8. while loop ---"
 
 count = 0
 while count < 4 {
-    pr "while count=" + str(count)
+    pr "while count=" + count
     count++
 }
 
 
-pr "--- 7. Functions ---"
+pr "--- 9. break and continue ---"
+
+for k in 0..10 {
+    if k == 3 {
+        cont
+    }
+    if k == 7 {
+        brk
+    }
+    pr "k=" + k
+}
+
+
+pr "--- 10. Functions ---"
 
 fn add(x, y) {
     ret x + y
 }
 
 fn greet(person, greeting = "Hello") {
-    pr greeting + ", " + person + "!"
+    pr "{greeting}, {person}!"
 }
 
-pr "add(7, 5) = " + str(add(7, 5))
+pr "add(7, 5) = " + add(7, 5)
 greet("World")
 greet("Rattled", "Hey")
 
 
-pr "--- 8. Classes ---"
+pr "--- 11. Classes, inheritance, static methods ---"
 
-Clas Animal {
-    def(species, sound) {
-        self.species = species
-        self.sound   = sound
-    }
-    fn speak() {
-        pr self.species + " says " + self.sound
+Clas Shape {
+    def(color) {
+        self.color = color
     }
     fn describe() {
-        pr "I am a " + self.species
+        pr "I am a {self.color} shape."
+    }
+    stat fn category() {
+        pr "Category: geometry"
     }
 }
 
-Clas Dog(Animal) {
-    def(dogName) {
-        sup("Dog", "Woof")
-        self.dogName = dogName
+Clas Circle(Shape) {
+    def(color, radius) {
+        sup(color)
+        self.radius = radius
     }
-    fn fetch() {
-        pr self.dogName + " fetches the ball!"
+    fn area() {
+        ret 3.14159 * self.radius * self.radius
+    }
+    fn describe() {
+        pr "I am a {self.color} circle with radius {self.radius}."
     }
 }
 
-cat = Animal("Cat", "Meow")
-cat.speak()
-cat.describe()
+s = Shape("blue")
+s.describe()
+Shape.category()
 
-dog = Dog("Rex")
-dog.speak()
-dog.fetch()
+c = Circle("red", 5)
+c.describe()
+pr "Circle area = " + c.area()
 
 
-pr "--- 9. Arrays ---"
+pr "--- 12. Arrays ---"
 
 arr nums = [10, 3, 7, 1, 9, 2]
 
-pr "Original:     " + str(nums)
+pr "Original:     " + nums
 nums.push(5)
-pr "After push(5):" + str(nums)
+pr "After push(5):" + nums
 nums.pop()
-pr "After pop():  " + str(nums)
-pr "nums[0] = " + str(nums[0])
+pr "After pop():  " + nums
+pr "nums[0] = " + nums[0]
 
 
-pr "--- 10. Hashmaps ---"
+pr "--- 13. Hashmaps ---"
 
 hashm person = {name: "Jared", age: 21, lang: "Rattled"}
 
-pr "name = " + person["name"]
-pr "age  = " + str(person["age"])
+personName = person["name"]
+pr "name = {personName}"
+pr "age  = " + person["age"]
 person["email"] = "jared@example.com"
 pr "email: " + person["email"]
 
 
-pr "--- 11. switch / case ---"
+pr "--- 14. switch / case ---"
 
 day = 3
 sw day {
@@ -159,37 +205,43 @@ sw day {
 }
 
 
-pr "--- 12. try / catch ---"
+pr "--- 15. try / catch (bare and typed) ---"
 
 try {
     bad = int("not_a_number")
 } catch {
-    pr "Caught: could not convert string to int"
+    pr "Bare catch: caught any exception"
+}
+
+try {
+    result = int("also_bad")
+} catch ValueError {
+    pr "Typed catch: caught ValueError"
 }
 
 
-pr "--- 13. Imports ---"
+pr "--- 16. Imports ---"
 
 imp math
-pr "sqrt(144) = " + str(math.sqrt(144))
-pr "floor(pi) = " + str(math.floor(pi))
+pr "sqrt(144) = " + math.sqrt(144)
+pr "floor(pi) = " + math.floor(pi)
 
 
-pr "--- 14. Sorting algorithms ---"
+pr "--- 17. Sorting algorithms ---"
 
 arr data = [5, 2, 8, 1, 9, 3]
-pr "Original: " + str(data)
-pr "mergSor:  " + str(mergSor(data))
-pr "quikSor:  " + str(quikSor(data))
-pr "bubSor:   " + str(bubSor(data))
-pr "heapSor:  " + str(heapSor(data))
+pr "Original: " + data
+pr "mergSor:  " + mergSor(data)
+pr "quikSor:  " + quikSor(data)
+pr "bubSor:   " + bubSor(data)
+pr "heapSor:  " + heapSor(data)
 
 
-pr "--- 15. Binary search ---"
+pr "--- 18. Binary search ---"
 
 arr sorted = [1, 3, 5, 7, 9, 11, 13]
-pr "binSer(sorted, 7)  = " + str(binSer(sorted, 7))
-pr "binSer(sorted, 6)  = " + str(binSer(sorted, 6))
+pr "binSer(sorted, 7)  = " + binSer(sorted, 7)
+pr "binSer(sorted, 6)  = " + binSer(sorted, 6)
 
 
 pr "--- Done! ---"

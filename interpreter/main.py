@@ -2,8 +2,9 @@
 # Rattled Programming Language — CLI Runner
 #
 # Usage:
-#   python main.py <file.ry>               Run a Rattled source file
+#   python main.py <file.ry>                Run a Rattled source file
 #   python main.py <file.ry> --emit-python  Print the generated Python, don't run
+#   python main.py <file.ry> --check        Lint only (no execution)
 #   python main.py                          Start the interactive REPL
 #
 import sys
@@ -40,7 +41,7 @@ def run_source(source, filename='<input>'):
     exec(code, {'__name__': '__main__'})
 
 
-def run_file(path, emit_python=False):
+def run_file(path, emit_python=False, check_only=False):
     """Read, compile, and optionally run a .ry file."""
     try:
         with open(path, 'r', encoding='utf-8') as fh:
@@ -56,6 +57,10 @@ def run_file(path, emit_python=False):
         python_src = compile_source(source, filename)
     except (LexError, ParseError, TranspileError) as exc:
         _fatal(str(exc))
+
+    if check_only:
+        print('[Rattled] {} — OK (no errors found)'.format(filename))
+        return
 
     if emit_python:
         print(python_src)
@@ -138,13 +143,14 @@ def main():
         repl()
         return
 
-    path       = args[0]
-    emit_flag  = '--emit-python' in args
+    path        = args[0]
+    emit_flag   = '--emit-python' in args
+    check_flag  = '--check' in args
 
     if not path.endswith('.ry'):
         print('[Rattled] Warning: expected a .ry source file', file=sys.stderr)
 
-    run_file(path, emit_python=emit_flag)
+    run_file(path, emit_python=emit_flag, check_only=check_flag)
 
 
 if __name__ == '__main__':
