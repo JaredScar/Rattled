@@ -34,17 +34,33 @@ if bool {
 }
 ```
 # TODO List
-- [x] Lexer splits up source code into tokens by spaces
+- [x] Lexer splits up source code into tokens and sets up their types
 
-- [ ] Code actually runs the functions
+- [x] Code actually runs the functions
 
-- [ ] Spaces get ignored by lexer
+- [x] Spaces get ignored by lexer
 
-- [ ] Multi-line variable declaration by keeping variable values in parenthesis
+- [x] Multi-line variable declaration by keeping variable values in parenthesis
 
-- [ ] Keywords (if, for, while) ignore spacing and equal amount of
+- [x] Keywords (if, for, while) ignore spacing and equal amount of
 parenthesis when parsing their bodies and conditionals
+
+# What's been built
+- **Lexer** — tokenises `.ry` source into a typed token stream; strips comments (backtick and `#`), skips all whitespace, and handles optional semicolons
+- **Parser** — recursive-descent + Pratt operator-precedence parser that produces a full AST
+- **Transpiler** — walks the AST and emits valid Python 3 source
+- **Runner / CLI** — `python interpreter/main.py file.ry` runs a Rattled program; `--emit-python` prints the generated Python instead
+- **REPL** — interactive prompt launched by running `python interpreter/main.py` with no arguments
+- **Standard library** — built-in sorting (`mergSor`, `quikSor`, `heapSor`, `bubSor`) and searching (`binSer`) algorithms
+- **All core language features** — variables, types, casting (`str`/`int`/`flo`/`boo`), arithmetic, comparisons, logical operators (`&&` `||` `!`), `++`/`--`, `if`/`elif`/`el`, `for` (auto-init + auto-increment), `while`, functions (`fn`/`ret`), classes (`Clas`/`def`/`fn`/`sup`), arrays (`arr`), hashmaps (`hashm`), imports (`imp`), switch/case (`sw`/`cs`), `try`/`catch`
+
 # Installation
-TBD
+```
+git clone https://github.com/your-username/Rattled.git
+cd Rattled
+python interpreter/main.py examples/fullDemo.ry
+```
+Requires Python 3.6 or newer. No external dependencies.
+
 # Documentation
-TBD
+See `PLAN.md` for the full language specification and syntax reference.

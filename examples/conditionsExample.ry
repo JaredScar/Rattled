@@ -1,17 +1,40 @@
-if 5 > 4.2 {
-    pr "This is a true statement"
+`──────────────────────────────────────────────────────
+  conditionsExample.ry — if / elif / el, booleans
+──────────────────────────────────────────────────────`
+
+` simple true condition `
+if 5 > 4 {
+    pr "5 > 4 is true"
 } el {
-    pr "This will never be printed...";
+    pr "this branch never runs"
 }
 
-if 4 < 5 {
-    pr "This will never be printed...";
+` elif chain `
+score = 85
+if score >= 90 {
+    pr "Grade: A"
+} elif score >= 80 {
+    pr "Grade: B"
+} elif score >= 70 {
+    pr "Grade: C"
 } el {
-    pr "This is not a true statement"
+    pr "Grade: F"
 }
 
-bool = FALSE
+` boolean variable and logical NOT `
+flag = FALSE
+if !flag {
+    pr "flag is FALSE, so !flag is TRUE"
+}
 
-if !bool {
-    pr "The statement is not FALSE so it is true and this statement runs"
+` logical AND `
+x = 4
+if x > 0 && x < 10 {
+    pr str(x) + " is between 0 and 10"
+}
+
+` logical OR `
+val = 15
+if val < 0 || val > 10 {
+    pr str(val) + " is outside the range 0-10"
 }

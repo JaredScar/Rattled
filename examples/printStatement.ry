@@ -1,14 +1,20 @@
-name = "Rattled";
-anotherVar = "This is another var "
-    + "to test if the language works: " + name
+`──────────────────────────────────────────────────────
+  printStatement.ry — variables, casting, print
+──────────────────────────────────────────────────────`
+
+name = "Rattled"
+
+anotherVar = "This is another var " + "to test multi-part concat: " + name
 
 numVariable = 6 + 10 + 11
-numVariableWithParenthesis = (6+11+10) # Needs to be read still, doesn't work
 
-thisIsVar = "This should cause an error, but currently " "doesn't though..." # This is a comment
+numVariableWithParenthesis = (6 + 11 + 10)
 
-castExample = "This is an example of casting something: " + str(5)
+castExample = "Casting an int to string: " + str(5)
 
-pr "This is how you run a print statement in the" + name + "programming language! :) Quite Simple!";
-pr "You don't need to end anything with a ;, but you can if you'd like :)"
-pr "'This is another test'"
+pr "Hello from the " + name + " programming language!"
+pr "anotherVar  = " + anotherVar
+pr "numVariable = " + str(numVariable)
+pr "numVariableWithParenthesis = " + str(numVariableWithParenthesis)
+pr castExample
+pr "You don't need to end lines with ; but you can if you want"

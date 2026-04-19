@@ -1,0 +1,45 @@
+# ── Python ────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.egg
+*.egg-info/
+dist/
+build/
+*.whl
+.eggs/
+
+# Virtual environments
+venv/
+.venv/
+env/
+.env/
+
+# ── PyCharm / IntelliJ ────────────────────────────────────────────
+.idea/workspace.xml
+.idea/tasks.xml
+.idea/usage.statistics.xml
+.idea/dictionaries/
+.idea/shelf/
+.idea/.name
+# Keep the rest of .idea/ (run configs, code style, etc.) if desired.
+# Uncomment the line below to ignore the entire .idea/ folder instead:
+# .idea/
+
+# ── macOS ─────────────────────────────────────────────────────────
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# ── Windows ───────────────────────────────────────────────────────
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# ── VS Code ───────────────────────────────────────────────────────
+.vscode/
+
+# ── Rattled output / temp files ───────────────────────────────────
+*.pyc
+*.tmp

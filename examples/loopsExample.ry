@@ -1,17 +1,27 @@
-for i < 10 {
-    pr "For Loop " + i
+`──────────────────────────────────────────────────────
+  loopsExample.ry — for and while loops
+──────────────────────────────────────────────────────`
+
+` for loop: i is auto-initialised to 0 and auto-incremented each pass `
+for i < 5 {
+    pr "for loop iteration " + str(i)
 }
 
-while i < 5 {
-    pr "While Loop " + i
+` while loop: programmer controls the variable `
+j = 0
+while j < 5 {
+    pr "while loop iteration " + str(j)
+    j++
 }
 
-index = 5;
-for 10 > index {
-    pr "For loop using a predefined variable 'index' " + index;
+` for loop starting from a pre-declared variable `
+index = 3
+for index < 8 {
+    pr "for with pre-declared index = " + str(index)
 }
 
-index = 0
-while index < 5 {
-    pr "While loop using predefined variable 'index' " + index
+` reversed condition: 10 > counter, loop var is counter `
+counter = 5
+for 10 > counter {
+    pr "10 > counter, counter = " + str(counter)
 }
