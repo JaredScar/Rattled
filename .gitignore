@@ -43,3 +43,7 @@ Desktop.ini
 # ── Rattled output / temp files ───────────────────────────────────
 *.pyc
 *.tmp
+
+# ── Windows reserved device file (can't be deleted, so ignore it) ─
+nul
+_del_nul.py
