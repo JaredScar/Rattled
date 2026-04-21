@@ -1,77 +1,90 @@
-# Rattled Python
-Rattled Python is a programming language I have set out to create
-in attempts to decrease the amount of typing a programmer actually
-has to do. The whole idea behind it was to decrease the amount of
-letters to be typed for simple functions as well as programming
-identifiers. Instead of typing out 'print("")' in python, in Rattled
-Python you can type 'pr ""' which would do the same thing as a print()
-function in python. Rattled Python was also designed for readability,
-which is why brackets ({}) have been required for containing the bodies of
-if statements, for, and while loops. I will admit that Java was my
-first language and I always did love brackets. Loops were designed with
-simplicity in mind at best. Rather than having to increment variables
-within the loop declaration, if the variable within the loop has not
-been previously defined, then it will be automatically set to 0 and
-increment as the loop passes through its body. This of course will not
-work so well if you have a loop like 'while i > 5' in which the variable
-i should be previously defined.
-# Code Preview
+# Rattled
+
+Rattled is a programming language that **transpiles to Python**, so your programs run at native Python speed with access to the full standard library and ecosystem. The syntax is meant to reduce typing for common operations (for example `pr "hello"` instead of `print("hello")`) while keeping block bodies in **curly braces** `{ }` for readability.
+
+See **`PLAN.md`** for the full language design and feature checklist.
+
+## Quick example
+
 ```
-age = 21
-name = 'Jared'
-bool = boo('TRUE')
-`This is a comment in Rattled`
-for i < 5 {
-    pr 'Example of a for loop in Rattled ' + i
+fn greet(name: str, times: int = 1) {
+    for i in 0..times {
+        pr "Hello, {name}!"
+    }
 }
 
-while i < 5 {
-    pr 'Example of a while loop in Rattled ' + i
+hashm scores = {alice: 95, bob: 82}
+for person, score in scores {
+    pr "{person}: {score}"
 }
 
-if bool {
-    pr "My name is " + name + " and I am " + age + " years old";
-}
+greet("Rattled", 2)
 ```
-# TODO List
-- [x] Lexer splits up source code into tokens and sets up their types
 
-- [x] Code actually runs the functions
+(`.ry` files use the same syntax.)
 
-- [x] Spaces get ignored by lexer
+## Features (high level)
 
-- [x] Multi-line variable declaration by keeping variable values in parenthesis
+- **Python runtime** — no interpreter VM; output is Python 3 source executed with `exec()`.
+- **Modern syntax** — ternary `? :`, null coalescing `??`, lambdas `lam x -> expr`, comprehensions, destructuring, type hints (optional), switch/case with guards and type checks.
+- **OOP** — classes, inheritance, abstract classes, static methods, properties (`get fn` / `set fn`), `sup()` for super calls.
+- **Modules** — `imp` for Python packages and for other `.ry` files in the same directory (auto-compiled).
+- **Tooling** — CLI `rattled`, REPL, `--emit-python` / `--check`, VS Code syntax extension under `vscode-rattled/`, GitHub Pages docs in `docs/`.
 
-- [x] Keywords (if, for, while) ignore spacing and equal amount of
-parenthesis when parsing their bodies and conditionals
+## Installation
 
-# What's been built
-- **Lexer** — tokenises `.ry` source into a typed token stream; strips comments (backtick and `#`), skips all whitespace, and handles optional semicolons
-- **Parser** — recursive-descent + Pratt operator-precedence parser that produces a full AST
-- **Transpiler** — walks the AST and emits valid Python 3 source
-- **Runner / CLI** — `python interpreter/main.py file.ry` runs a Rattled program; `--emit-python` prints the generated Python instead
-- **REPL** — interactive prompt launched by running `python interpreter/main.py` with no arguments
-- **Standard library** — built-in sorting (`mergSor`, `quikSor`, `heapSor`, `bubSor`) and searching (`binSer`) algorithms
-- **All core language features** — variables, types, casting (`str`/`int`/`flo`/`boo`), arithmetic, comparisons, logical operators (`&&` `||` `!`), `++`/`--`, `if`/`elif`/`el`, `for` (auto-init + auto-increment), `while`, functions (`fn`/`ret`), classes (`Clas`/`def`/`fn`/`sup`), arrays (`arr`), hashmaps (`hashm`), imports (`imp`), switch/case (`sw`/`cs`), `try`/`catch`
+**From PyPI** (recommended):
 
-# Installation
+```bash
+pip install rattled
+rattled --help
+rattled examples/fullDemo.ry
 ```
-git clone https://github.com/your-username/Rattled.git
+
+**From source** (editable install):
+
+```bash
+git clone https://github.com/JaredScar/Rattled.git
 cd Rattled
-python interpreter/main.py examples/fullDemo.ry
+pip install -e .
 ```
-Requires Python 3.6 or newer. No external dependencies.
 
-# Documentation
-A full documentation website lives in the `docs/` folder and is published via **GitHub Pages**.
+On Windows you can also run `install.bat` or `install.ps1` to install and help put the `rattled` script on your PATH.
 
-To enable it:
-1. Push this repository to GitHub.
-2. Go to **Settings → Pages**.
-3. Set **Source** to `Deploy from a branch`, branch `main`, folder `/docs`.
-4. Your docs will be live at `https://your-username.github.io/Rattled/`.
+Requires **Python 3.8+**. Runtime has no extra dependencies beyond the standard library.
 
-- `docs/index.html` — Landing page with features, install, and code samples
-- `docs/reference.html` — Full language reference (all syntax, OOP, stdlib, CLI)
+## CLI
 
-For the raw language spec see `PLAN.md`.
+| Command | Description |
+|--------|-------------|
+| `rattled file.ry` | Run a Rattled program |
+| `rattled file.ry --emit-python` | Print generated Python only |
+| `rattled file.ry --check` | Parse/check without running |
+| `rattled` | Start the REPL |
+
+You can still run via `python interpreter/main.py …` if you prefer.
+
+## Project layout
+
+| Path | Role |
+|------|------|
+| `interpreter/` | Lexer, parser, transpiler, CLI (`main.py`) |
+| `rattled.py` | Top-level launcher |
+| `examples/` | Demo `.ry` files (`fullDemo.ry`, `phase6Demo.ry`, `phase7Demo.ry`, …) |
+| `docs/` | Static site for **GitHub Pages** (landing + full reference) |
+| `vscode-rattled/` | VS Code grammar for `.ry` |
+| `PLAN.md` | Language specification and phased roadmap |
+
+## Documentation
+
+- **`docs/`** — Open `docs/index.html` locally or publish with GitHub Pages (**Settings → Pages →** branch `main`, folder **`/docs`**). Includes a full **reference** page covering syntax, stdlib, and CLI.
+- **`PLAN.md`** — Authoritative design doc and phase status.
+
+## What’s implemented
+
+- **Lexer / parser / transpiler** — Token stream, AST, Python emission with `# ry:N` line markers for errors.
+- **Language** — Variables, casting (`str` / `int` / `flo` / `boo`), operators, `if` / `elif` / `el`, `for` (range, collection, C-style), `while`, `sw` / `cs`, `try` / `catch` / `fin`, functions (variadic `...args`, `~~kwargs`), generators (`yld`), classes as above, list/hashmap literals, string interpolation `{name}`, `.ry` imports, runtime errors mapped back to `.ry` lines where possible.
+- **Packaging** — `pyproject.toml` with `rattled` console script.
+- **Extras** — Windows installers, VS Code extension, static documentation site.
+
+Early TODO items (lexer, runner, spacing, parsing) are **done**; see `PLAN.md` for the detailed roadmap through Phase 7.
