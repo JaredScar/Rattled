@@ -42,7 +42,7 @@ class Transpiler:
     # ═══════════════════════════════════════════════════════════════
 
     def transpile(self, program_node):
-        for stmt in program_node.stmts:
+        for stmt in self._ordered_stmts(program_node.stmts):
             self._stmt(stmt)
 
         body = '\n'.join(self._lines)
@@ -404,11 +404,32 @@ class Transpiler:
     def _emit_block(self, stmts):
         self._enter_scope()
         if stmts:
-            for s in stmts:
+            for s in self._ordered_stmts(stmts):
                 self._stmt(s)
         else:
             self._emit('pass')
         self._leave_scope()
+
+    def _ordered_stmts(self, stmts):
+        """
+        Hoist function definitions to the front of a block so a function can
+        be called before its `fn` line. Functions whose defaults are not
+        literals stay in place, because those defaults are evaluated when
+        the function is defined.
+        """
+        hoisted = [s for s in stmts if self._can_hoist_fn(s)]
+        rest    = [s for s in stmts if not self._can_hoist_fn(s)]
+        return hoisted + rest
+
+    def _can_hoist_fn(self, node):
+        if not isinstance(node, FnDefNode):
+            return False
+        for param in node.params:
+            default = param[1] if len(param) > 1 else None
+            if default is not None and not isinstance(
+                    default, (IntNode, FloatNode, StringNode, BoolNode, NullNode)):
+                return False
+        return True
 
     # ── lhs helper ───────────────────────────────────────────────
 

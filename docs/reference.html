@@ -519,7 +519,11 @@ Your score is {score}.
 pr msg
 
 ` pr auto-casts numbers to string `
-pr "Value = " + score    ` no str() needed `</code></pre>
+pr "Value = " + score    ` no str() needed `
+
+` JS-style string aliases `
+pr "hello".startsWith("he")
+pr "hello".endsWith("lo")</code></pre>
       </div>
     </section>
 
@@ -681,8 +685,13 @@ fn minMax(nums) {
     ret min(nums), max(nums)
 }
 
-lo, hi = minMax([3, 1, 7, 2, 9])</code></pre>
+lo, hi = minMax([3, 1, 7, 2, 9])
+
+` A function may be called before its fn line in the same block `
+pr early(2, 3)
+fn early(a, b) { ret a + b }</code></pre>
       </div>
+      <p>Functions with literal defaults (or no defaults) are emitted before the rest of the block, so they can be called earlier in that block. A default that is not a literal stays where it is written, because that value is computed when the function is defined.</p>
     </section>
 
     <!-- ─────────────── LAMBDAS ─────────────── -->

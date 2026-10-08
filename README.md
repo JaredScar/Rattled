@@ -2,7 +2,7 @@
 
 Rattled is a programming language that **transpiles to Python**, so your programs run at native Python speed with access to the full standard library and ecosystem. The syntax is meant to reduce typing for common operations (for example `pr "hello"` instead of `print("hello")`) while keeping block bodies in **curly braces** `{ }` for readability.
 
-See **`PLAN.md`** for the full language design and feature checklist.
+The language in **`PLAN.md`** is fully implemented (Phases 1–7). That file is the specification, not a list of remaining work.
 
 ## Quick example
 
@@ -73,18 +73,18 @@ You can still run via `python interpreter/main.py …` if you prefer.
 | `examples/` | Demo `.ry` files (`fullDemo.ry`, `phase6Demo.ry`, `phase7Demo.ry`, …) |
 | `docs/` | Static site for **GitHub Pages** (landing + full reference) |
 | `vscode-rattled/` | VS Code grammar for `.ry` |
-| `PLAN.md` | Language specification and phased roadmap |
+| `PLAN.md` | Completed language specification (Phases 1–7) |
 
 ## Documentation
 
-- **`docs/`** — Open `docs/index.html` locally or publish with GitHub Pages (**Settings → Pages →** branch `main`, folder **`/docs`**). Includes a full **reference** page covering syntax, stdlib, and CLI.
-- **`PLAN.md`** — Authoritative design doc and phase status.
+- **`docs/`** — Open `docs/index.html` locally, or publish with GitHub Pages (**Settings → Pages →** branch `main`, folder **`/docs`**). `docs/reference.html` is the full syntax reference.
+- **`PLAN.md`** — The finished specification. Every phase is checked off, and the design decisions in section 9 are the ones the compiler implements.
 
-## What’s implemented
+## Language status
 
-- **Lexer / parser / transpiler** — Token stream, AST, Python emission with `# ry:N` line markers for errors.
-- **Language** — Variables, casting (`str` / `int` / `flo` / `boo`), operators, `if` / `elif` / `el`, `for` (range, collection, C-style), `while`, `sw` / `cs`, `try` / `catch` / `fin`, functions (variadic `...args`, `~~kwargs`), generators (`yld`), classes as above, list/hashmap literals, string interpolation `{name}`, `.ry` imports, runtime errors mapped back to `.ry` lines where possible.
-- **Packaging** — `pyproject.toml` with `rattled` console script.
-- **Extras** — Windows installers, VS Code extension, static documentation site.
+Rattled is complete relative to `PLAN.md`.
 
-Early TODO items (lexer, runner, spacing, parsing) are **done**; see `PLAN.md` for the detailed roadmap through Phase 7.
+- **Compiler** — Lexer, parser, and transpiler. Generated Python carries `# ry:N` markers, and runtime errors report the `.ry` line when they can.
+- **Language** — Variables, casting, operators, `if` / `elif` / `el`, `for` (condition, range, and collection), `while`, `sw` / `cs` (guards and type checks), `try` / `catch` / `fin`, functions (defaults, `...args`, `~~kwargs`, calls before the definition), lambdas, generators, classes, list and dict comprehensions, destructuring, string interpolation, optional type hints, and `.ry` modules.
+- **Aliases** — `pr`, `push` → `append`, `len()`, `startsWith` / `endsWith`.
+- **Distribution** — `pyproject.toml` (`rattled` command), Windows installers, VS Code grammar, and the docs site.

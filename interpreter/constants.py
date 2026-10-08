@@ -61,6 +61,8 @@ CAST_MAP = {
 # ─── List method aliases (Rattled name → Python name) ───────────────────────
 METHOD_ALIAS = {
     'push': 'append',
+    'startsWith': 'startswith',
+    'endsWith': 'endswith',
     # 'len' is special: transpiles to len(obj) not obj.len()
 }
 LEN_METHOD = 'len'

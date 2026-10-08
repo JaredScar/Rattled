@@ -1,6 +1,6 @@
 # Rattled Language — Design & Implementation Plan
 
-> This document is a living specification. Edit any section freely before implementation begins.
+> **Status: complete.** Phases 1–7 are implemented. This document is the language specification.
 > Rattled transpiles to Python, so runtime performance is identical to Python.
 
 ---
@@ -28,8 +28,9 @@
 6. [Standard Library (Built-ins)](#6-standard-library-built-ins)
 7. [Error Handling](#7-error-handling)
 8. [Implementation Roadmap](#8-implementation-roadmap)
-9. [Open Questions / Decisions Needed](#9-open-questions--decisions-needed)
-10. [Phase 6 — Language Completeness Backlog](#phase-6--language-completeness-)
+9. [Design Decisions](#9-design-decisions)
+10. [Phase 6 — Language Completeness](#phase-6--language-completeness--complete)
+11. [Phase 7 — Polish & Completeness](#phase-7--polish--completeness--complete)
 
 ---
 
@@ -99,7 +100,7 @@ Rattled is **dynamically typed**, matching Python's behavior exactly.
 | Boolean literal | `bool` | `TRUE` / `FALSE` (uppercase) |
 | Array | `list` | `[1, 2, 3]` |
 | Hashmap | `dict` | `{key: value}` |
-| Null / None | `None` | `null` keyword (TBD — see §9) |
+| Null / None | `None` | `null` keyword |
 
 ### Casting
 
@@ -120,9 +121,7 @@ Rattled is **dynamically typed**, matching Python's behavior exactly.
 `This is a single-line comment`
 ```
 
-Backtick-delimited. Everything between the backticks is ignored.
-
-> **Decision needed:** Do we want multi-line backtick comments, or a second syntax (e.g. `\` … `\`)?
+Backtick-delimited. Everything between the backticks is ignored, including newlines, so a comment can span multiple lines. `#` also starts a line comment.
 
 ---
 
@@ -159,7 +158,7 @@ x = 10
 y = 3.14
 s = "hello"
 b = TRUE          ` Boolean — TRUE or FALSE `
-n = null          ` None (TBD) `
+n = null          ` None `
 
 casted = str(x)   ` "10" `
 back   = int("5") ` 5    `
@@ -216,7 +215,7 @@ pr "Name: " + name + " Age: " + str(age)
 ```
 
 - `pr` maps to Python's `print()`.
-- String concatenation with `+` works as in Python; non-strings must be cast.
+- `pr` auto-casts non-strings, including values joined with `+`, so `pr "Age: " + age` works without `str(age)`.
 
 ```
 name = inp "Enter your name: "
@@ -228,9 +227,6 @@ name = inp "Enter your name: "
 wr "output.txt" "Some content"    ` Write to file `
 rd "input.txt"                    ` Read from file — returns string `
 ```
-
-> **Decision needed:** Should `pr` automatically cast non-strings (i.e. allow `pr age` without `str(age)`)?  
-> Python's `print()` handles this natively; we could mirror that.
 
 ---
 
@@ -304,7 +300,7 @@ while i < 10:
     i += 1
 ```
 
-> **Decision needed:** Should `for` support a range-style syntax like `for i in 0..10`? This would be more explicit and map cleanly to Python's `range()`.
+Range form is also supported: `for i in 0..10 { }`. Both the condition form and the range form are implemented.
 
 #### while loop
 
@@ -343,8 +339,8 @@ pr str(result)
 
 - `fn` declares a function (maps to Python `def`).
 - `ret` returns a value (maps to Python `return`).
-- Parameters are comma-separated, no type annotations required.
-- Functions can be called before they are defined (transpiler resolves ordering — TBD).
+- Parameters are comma-separated. Type annotations are optional.
+- A function may be called before its `fn` line in the same block. Definitions with literal (or no) defaults are emitted first. A default that is not a literal stays in source order, because Python evaluates defaults when the function is defined.
 
 #### Default Parameters
 
@@ -382,12 +378,10 @@ dog.speak()
 ```
 Clas Dog(Animal) {
     def(name) {
-        sup("Dog", "Woof")   ` sup = super().__init__() `
+        sup("Dog", "Woof")   ` sup(...) = super().__init__(...) `
     }
 }
 ```
-
-> **Decision needed:** Should `sup` be the keyword for `super()`?
 
 ---
 
@@ -402,10 +396,10 @@ arr names = ["Alice", "Bob"]
 nums.push(6)       ` append `
 nums.pop()         ` remove last `
 pr nums[0]         ` indexing `
-pr nums.len()      ` length `
+pr nums.len()      ` length — emits len(nums) `
 ```
 
-> **Decision needed:** Map `.push()` / `.pop()` / `.len()` to Python's `.append()` / `.pop()` / `len()` — or just allow Python-style method calls directly?
+`.push()` emits `.append()`. `.pop()` is Python's `pop`. Other method names pass through, except `startsWith` / `endsWith`, which emit `startswith` / `endswith`.
 
 #### Hashmaps (Dicts)
 
@@ -451,9 +445,7 @@ sw score {
 }
 ```
 
-Transpiles to Python `match` / `case` (Python 3.10+) or an `if/elif/else` chain for older Python.
-
-> **Decision needed:** Minimum Python version to target? Recommend 3.10+ for `match` support.
+Transpiles to an `if` / `elif` / `else` chain so the language runs on Python 3.8+.
 
 ---
 
@@ -479,7 +471,7 @@ Transpiles to Python `match` / `case` (Python 3.10+) or an `if/elif/else` chain 
 | `fl` | `sys.stdout.flush()` | Flush output |
 | `TRUE` | `True` | Boolean true |
 | `FALSE` | `False` | Boolean false |
-| `null` | `None` | Null value (TBD) |
+| `null` | `None` | Null value |
 
 ---
 
@@ -529,9 +521,7 @@ try {
 }
 ```
 
-Maps to Python's `try / except`.
-
-> **Decision needed:** Should `catch` accept an exception type, e.g. `catch ValueError`?
+Maps to Python's `try / except`. `catch` may be bare, name one type (`catch ValueError`), or name several (`catch ValueError, TypeError`). `fin { }` maps to `finally`.
 
 ---
 
@@ -594,7 +584,7 @@ Maps to Python's `try / except`.
 
 ### Phase 6 — Language Completeness ✅ Complete
 
-Features present in most modern languages (Go, Kotlin, Swift, TypeScript, Rust) that Rattled does not yet support. Grouped by area.
+Features common in modern languages. All of them are implemented.
 
 #### 6A — Operators & Expressions
 
@@ -611,8 +601,6 @@ Features present in most modern languages (Go, Kotlin, Swift, TypeScript, Rust) 
 | For-each over array | `for item in myArr { }` | `for item in myArr:` | ✅ done |
 | For-each over hashmap | `for key, val in myMap { }` | `for k,v in myMap.items():` | ✅ done |
 | Array / string slice | `myArr[1..4]` | `myArr[1:4]` | ✅ done |
-
-> Note: `for i in 0..10` (numeric range) already works. The missing form is iterating *elements* of an existing collection.
 
 #### 6C — Error Handling
 
@@ -631,6 +619,7 @@ Features present in most modern languages (Go, Kotlin, Swift, TypeScript, Rust) 
 | Variadic keyword args | `fn foo(~~kwargs) { }` | `def foo(**kwargs):` | ✅ done |
 | Generator / yield | `yld value` inside `fn` | `yield value` | ✅ done |
 | Keyword call args | `foo(key = val)` | same | ✅ done |
+| Forward calls | call a `fn` before its definition in the same block | definitions emitted first | ✅ done |
 
 #### 6E — Strings & Collections
 
@@ -656,43 +645,43 @@ Features present in most modern languages (Go, Kotlin, Swift, TypeScript, Rust) 
 | Import alias | `imp numpy as np` | same | ✅ done |
 | Wildcard import | `imp * from math` | `from math import *` | ✅ done |
 
-#### 6H — Standard Library Built-ins
+#### 6H — Standard Library Built-ins ✅ Complete
 
-These can be supported without new syntax — they just need auto-import wrappers or direct pass-through.
+Python built-ins pass through as ordinary calls. `rd` / `wr` remain the short file helpers.
 
-| Function | Notes |
-|----------|-------|
-| `len(x)` | Already works via Python pass-through |
-| `abs(x)` `min(x,y)` `max(x,y)` `round(x,n)` `pow(x,n)` | Pass-through to Python built-ins |
-| `type(x)` | Rattled-friendly type inspection |
-| `range(n)` `range(a,b)` | Should be usable directly inside `for` |
-| `zip(a, b)` `enumerate(a)` | Useful for iteration patterns |
-| `open(path, mode)` | Direct file I/O; `rd`/`wr` cover basic cases |
-| String methods | `.upper()` `.lower()` `.strip()` `.split()` `.replace()` `.startsWith()` → `.startswith()` |
+| Function | Notes | Status |
+|----------|-------|--------|
+| `len(x)` | Python `len` | ✅ done |
+| `abs` `min` `max` `round` `pow` | Python built-ins | ✅ done |
+| `type(x)` | Python `type` | ✅ done |
+| `range(n)` `range(a, b)` | Usable in expressions and in `for` | ✅ done |
+| `zip(a, b)` `enumerate(a)` | Python built-ins | ✅ done |
+| `open(path, mode)` | Direct file I/O; `rd` / `wr` cover the short form | ✅ done |
+| String methods | `.upper()` `.lower()` `.strip()` `.split()` `.replace()` pass through. `.startsWith()` / `.endsWith()` alias to `startswith` / `endswith` | ✅ done |
 
 ---
 
-## 9. Open Questions / Decisions Needed
+## 9. Design Decisions
 
-These items are marked as TBD above. Please review and fill in your preferences:
+These choices are implemented. They are recorded here so the spec does not read as unfinished work.
 
-| # | Question | Options | Your Choice |
-|---|----------|---------|-------------|
-| 1 | Multi-line comments | Nested backticks \`\` … \`\` vs. dedicated syntax | |
-| 2 | `pr` with non-strings | Auto-cast like Python's `print()`, or require explicit `str()` | |
-| 3 | `for` range syntax | `for i < n` (current) vs. `for i in 0..n` (explicit range) | |
-| 4 | `null` keyword | Use `null` → `None`, or omit and use Python's `None` directly | |
-| 5 | Array methods | `.push()/.pop()/.len()` aliases vs. raw Python method names | |
-| 6 | `sup` keyword | Use `sup(…)` for `super().__init__(…)` | |
-| 7 | `catch` with types | `catch` only vs. `catch ExceptionType` | |
-| 8 | Minimum Python version | 3.8 (no match), 3.10+ (match/case for `sw`) | |
-| 9 | Forward function calls | Allow calling `fn` before definition? (requires two-pass parse) | |
-| 10 | String interpolation | Plain concat `+` only, or template strings like `` `Hello {name}` `` | |
-| 11 | Ternary syntax | `a if cond el b` (Rattled-native) vs. `cond ? a : b` (C-style) | |
-| 12 | Lambda syntax | `lam x -> expr` vs. `fn(x) { ret expr }` (anonymous fn) | |
-| 13 | Variadic args | `...args` (JS-style spread) vs. `*args` (Python-style) | |
-| 14 | Augmented assignment | `+=` `-=` `*=` `/=` (standard symbols — no real alternative) | |
-| 15 | For-each vs range-for | Same `for x in y` keyword for both collection iteration and range? | |
+| # | Question | Decision |
+|---|----------|----------|
+| 1 | Multi-line comments | Backtick comments may span lines. `#` is a line comment. |
+| 2 | `pr` with non-strings | Auto-cast, including `+` chains inside `pr`. |
+| 3 | `for` range syntax | Both `for i < n` and `for i in 0..n`. |
+| 4 | `null` keyword | `null` transpiles to `None`. |
+| 5 | Array methods | `.push()` → `append`, `.len()` → `len()`, `.pop()` is Python's `pop`. Other names pass through. |
+| 6 | `sup` keyword | `sup(...)` is `super().__init__(...)`. |
+| 7 | `catch` with types | Bare `catch`, one type, or several types. `fin` is `finally`. |
+| 8 | Minimum Python version | 3.8+. `sw` emits `if` / `elif`, not `match`. |
+| 9 | Forward function calls | Allowed in the same block. Literal-default functions are emitted first. |
+| 10 | String interpolation | `"Hello {name}"` emits an f-string. Backticks stay comments. |
+| 11 | Ternary syntax | `cond ? a : b`. |
+| 12 | Lambda syntax | Both `lam x -> expr` and `fn(x) { ret expr }`. |
+| 13 | Variadic args | `...args` and `~~kwargs`. |
+| 14 | Augmented assignment | `+=` `-=` `*=` `/=` `%=` `**=`. |
+| 15 | For-each vs range-for | `for x in y` covers numeric ranges and collections. |
 
 ---
 
